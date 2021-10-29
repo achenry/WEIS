@@ -8,6 +8,7 @@ from wisdem.commonse.distributions import RayleighCDF_func
 import fatpack
 '''
 
+
 class RotorLoadsDeflStrainsWEIS(Group):
     # OpenMDAO group to compute the blade elastic properties, deflections, and loading
     def initialize(self):
@@ -16,7 +17,7 @@ class RotorLoadsDeflStrainsWEIS(Group):
 
     def setup(self):
         modeling_options = self.options['modeling_options']
-        opt_options      = self.options['opt_options']
+        opt_options = self.options['opt_options']
 
         self.add_subsystem("m2pa", MtoPrincipalAxes(modeling_options=modeling_options), promotes=['alpha', 'M1', 'M2'])
         self.add_subsystem("strains", ComputeStrains(modeling_options=modeling_options), promotes=['alpha', 'M1', 'M2'])
@@ -26,7 +27,8 @@ class RotorLoadsDeflStrainsWEIS(Group):
         # Strains from frame3dd to constraint
         self.connect('strains.strainU_spar', 'constr.strainU_spar')
         self.connect('strains.strainL_spar', 'constr.strainL_spar')
-         
+
+
 class MtoPrincipalAxes(ExplicitComponent):
     def initialize(self):
         self.options.declare("modeling_options")
@@ -34,7 +36,7 @@ class MtoPrincipalAxes(ExplicitComponent):
     def setup(self):
         rotorse_options = self.options["modeling_options"]["WISDEM"]["RotorSE"]
         self.n_span = n_span = rotorse_options["n_span"]
-        
+
         self.add_input(
             "alpha",
             val=np.zeros(n_span),
@@ -69,7 +71,6 @@ class MtoPrincipalAxes(ExplicitComponent):
         )
 
     def compute(self, inputs, outputs):
-        
         alpha = inputs['alpha']
 
         Mx = inputs['Mx']
@@ -82,7 +83,7 @@ class MtoPrincipalAxes(ExplicitComponent):
             x2 = x * ca + y * sa
             y2 = -x * sa + y * ca
             return x2, y2
-        
+
         M1, M2 = rotate(-My, -Mx)
 
         outputs['M1'] = M1
@@ -107,33 +108,33 @@ def OLAFParams(omega_rpm, deltaPsiDeg=6, nNWrot=2, nFWrot=10, nFWrotFree=3, nPer
              8            45
     """
     omega_rpm = np.asarray(omega_rpm)
-    omega = omega_rpm*2*np.pi/60
-    T = 2*np.pi/omega
+    omega = omega_rpm * 2 * np.pi / 60
+    T = 2 * np.pi / omega
     if nPerRot is not None:
-        dt_wanted    = np.around(T/nPerRot,4)
+        dt_wanted = np.around(T / nPerRot, 4)
     else:
-        dt_wanted    = np.around(deltaPsiDeg/(6*omega_rpm),4)
-        nPerRot = int(2*np.pi /(deltaPsiDeg*np.pi/180))
+        dt_wanted = np.around(deltaPsiDeg / (6 * omega_rpm), 4)
+        nPerRot = int(2 * np.pi / (deltaPsiDeg * np.pi / 180))
 
-    nNWPanel     = nNWrot*nPerRot
-    nFWPanel     = nFWrot*nPerRot
-    nFWPanelFree = nFWrotFree*nPerRot
+    nNWPanel = nNWrot * nPerRot
+    nFWPanel = nFWrot * nPerRot
+    nFWPanelFree = nFWrotFree * nPerRot
 
     if totalRot is None:
-        totalRot = (nNWrot + nFWrot)*3 # going three-times through the entire wake
+        totalRot = (nNWrot + nFWrot) * 3  # going three-times through the entire wake
 
-    tMax = dt_wanted*nPerRot*totalRot
+    tMax = dt_wanted * nPerRot * totalRot
 
     if show:
-        print(dt_wanted              , '  dt')
-        print(int      (nNWPanel    ), '  nNWPanel          ({} rotations)'.format(nNWrot))
-        print(int      (nFWPanel    ), '  FarWakeLength     ({} rotations)'.format(nFWrot))
-        print(int      (nFWPanelFree), '  FreeFarWakeLength ({} rotations)'.format(nFWrotFree))
-        print(tMax              , '  Tmax ({} rotations)'.format(totalRot))
+        print(dt_wanted, '  dt')
+        print(int(nNWPanel), '  nNWPanel          ({} rotations)'.format(nNWrot))
+        print(int(nFWPanel), '  FarWakeLength     ({} rotations)'.format(nFWrot))
+        print(int(nFWPanelFree), '  FreeFarWakeLength ({} rotations)'.format(nFWrotFree))
+        print(tMax, '  Tmax ({} rotations)'.format(totalRot))
 
     return dt_wanted, tMax, nNWPanel, nFWPanel, nFWPanelFree
 
-        
+
 '''
 def BladeFatigue(self, FAST_Output, case_list, dlc_list, inputs, outputs, discrete_inputs, discrete_outputs):
 
@@ -424,4 +425,3 @@ class ModesElastoDyn(ExplicitComponent):
         outputs['G_stiff']    = inputs['G']    * k
 
 '''
-

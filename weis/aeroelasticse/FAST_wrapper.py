@@ -3,13 +3,14 @@ import subprocess
 import platform
 import time
 
+
 class FAST_wrapper(object):
 
     def __init__(self, **kwargs):
 
-        self.FAST_exe = None   # Path to executable
-        self.FAST_InputFile = None   # FAST input file (ext=.fst)
-        self.FAST_directory = None   # Path to fst directory files
+        self.FAST_exe = None  # Path to executable
+        self.FAST_InputFile = None  # FAST input file (ext=.fst)
+        self.FAST_directory = None  # Path to fst directory files
 
         # Optional population class attributes from key word arguments
         for k, w in kwargs.items():
@@ -25,7 +26,7 @@ class FAST_wrapper(object):
         self.input_file = os.path.join(self.FAST_directory, self.FAST_InputFile)
 
         try:
-            if platform.system()!='Windows' and self.FAST_exe[-4:]=='.exe':
+            if platform.system() != 'Windows' and self.FAST_exe[-4:] == '.exe':
                 self.FAST_exe = self.FAST_exe[:-4]
         except:
             pass
