@@ -3,7 +3,6 @@ __copyright__ = "Copyright 2020, National Renewable Energy Laboratory"
 __maintainer__ = "Jake Nunemaker"
 __email__ = ["jake.nunemaker@nrel.gov"]
 
-
 import os
 import multiprocessing as mp
 from functools import partial
@@ -12,7 +11,8 @@ import numpy as np
 import pandas as pd
 import fatpack
 
-from pCrunch.io import OpenFASTAscii, OpenFASTBinary #, OpenFASTOutput
+from pCrunch.io import OpenFASTAscii, OpenFASTBinary  # , OpenFASTOutput
+
 
 # Could use a dict or namedtuple here, but this standardizes things a bit better for users
 class FatigueParams:
@@ -46,6 +46,7 @@ class FatigueParams:
         return FatigueParams(lifetime=self.lifetime,
                              load2stress=self.load2stress, slope=self.slope,
                              ult_stress=self.ult_stress, S_intercept=self.S_intercept)
+
 
 class LoadsAnalysis:
     """Implementation of `mlife` in python."""
@@ -84,7 +85,7 @@ class LoadsAnalysis:
         self._mc = kwargs.get("magnitude_channels", {})
         self._fc = kwargs.get("fatigue_channels", {})
         self._td = kwargs.get("trim_data", ())
-        
+
     def process_outputs(self, cores=1, **kwargs):
         """
         Processes all outputs for summary statistics and configured damage
@@ -431,28 +432,28 @@ class LoadsAnalysis:
         return_damage = kwargs.get("return_damage", False)
         goodman = kwargs.get("goodman_correction", False)
         Scin = Sc if Sc > 0.0 else Sult
-        
+
         # Working with loads for DELs
         try:
             F, Fmean = fatpack.find_rainflow_ranges(ts, return_means=True)
         except:
             F = Fmean = np.zeros(1)
         if goodman and np.abs(load2stress) > 0.0:
-            F = fatpack.find_goodman_equivalent_stress(F, Fmean, Sult/np.abs(load2stress))
+            F = fatpack.find_goodman_equivalent_stress(F, Fmean, Sult / np.abs(load2stress))
         Nrf, Frf = fatpack.find_range_count(F, bins)
         DELs = Frf ** slope * Nrf / elapsed
         DEL = DELs.sum() ** (1.0 / slope)
         # With fatpack do:
-        #curve = fatpack.LinearEnduranceCurve(1.)
-        #curve.m = slope
-        #curve.Nc = elapsed
-        #DEL = curve.find_miner_sum(np.c_[Frf, Nrf]) ** (1 / slope)
+        # curve = fatpack.LinearEnduranceCurve(1.)
+        # curve.m = slope
+        # curve.Nc = elapsed
+        # DEL = curve.find_miner_sum(np.c_[Frf, Nrf]) ** (1 / slope)
 
         # Compute Palmgren/Miner damage using stress
-        D = np.nan # default return value
+        D = np.nan  # default return value
         if return_damage and np.abs(load2stress) > 0.0:
             try:
-                S, Mrf = fatpack.find_rainflow_ranges(ts*load2stress, return_means=True)
+                S, Mrf = fatpack.find_rainflow_ranges(ts * load2stress, return_means=True)
             except:
                 S = Mrf = np.zeros(1)
             if goodman:
@@ -463,8 +464,8 @@ class LoadsAnalysis:
             curve.Nc = 1
             D = curve.find_miner_sum(np.c_[Srf, Nrf])
             if lifetime > 0.0:
-                D *= lifetime*365.0*24.0*60.0*60.0 / elapsed
-                
+                D *= lifetime * 365.0 * 24.0 * 60.0 * 60.0 / elapsed
+
         return DEL, D
 
 
@@ -525,9 +526,9 @@ class PowerProduction:
         elif disttype.lower() == "pdf":
             # Calculate probability of wind speed based on WeibulPDF
             wind_prob = (
-                (k / c)
-                * (windspeed / c) ** (k - 1)
-                * np.exp(-(windspeed / c) ** k)
+                    (k / c)
+                    * (windspeed / c) ** (k - 1)
+                    * np.exp(-(windspeed / c) ** k)
             )
 
         else:
