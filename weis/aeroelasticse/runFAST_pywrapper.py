@@ -147,7 +147,7 @@ class runFAST_pywrapper(object):
         if self.fst_vt == {}:
             reader.FAST_InputFile = self.FAST_InputFile
             reader.FAST_directory = self.FAST_directory
-            reader.execute()
+            # reader.execute()
 
             # Initialize writer variables with input model
             writer.fst_vt = self.fst_vt = reader.fst_vt
@@ -161,8 +161,8 @@ class runFAST_pywrapper(object):
         # Modify any specified output channels
         if self.channels:
             writer.update_outlist(self.channels)
-        # Write out FAST model
-        writer.execute()
+        # Write out FAST model TODO
+        # writer.execute()
         if self.write_yaml:
             writer.FAST_yamlfile = self.FAST_yamlfile_out
             writer.write_yaml()
@@ -198,8 +198,8 @@ class runFAST_pywrapper(object):
 
             # Run FAST
             wrapper.FAST_exe = self.FAST_exe
-            wrapper.FAST_InputFile = os.path.split(writer.FAST_InputFileOut)[1]
-            wrapper.FAST_directory = os.path.split(writer.FAST_InputFileOut)[0]
+            wrapper.FAST_InputFile = self.FAST_InputFile #os.path.split(writer.FAST_InputFileOut)[1] TODO
+            wrapper.FAST_directory = self.FAST_directory # os.path.split(writer.FAST_InputFileOut)[0] TODO
 
             FAST_Output = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'outb')
             FAST_Output_txt = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'out')

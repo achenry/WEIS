@@ -171,15 +171,15 @@ class InputReader_OpenFAST(object):
 
         # Fst
         f.readline()
-        self.fst_vt['Fst']['Linearize']  = f.readline().split()[0]
-        self.fst_vt['Fst']['CalcSteady'] = f.readline().split()[0]
-        self.fst_vt['Fst']['TrimCase']   = f.readline().split()[0]
-        self.fst_vt['Fst']['TrimTol']    = f.readline().split()[0]
-        self.fst_vt['Fst']['TrimGain']   = f.readline().split()[0]
-        self.fst_vt['Fst']['Twr_Kdmp']   = f.readline().split()[0]
-        self.fst_vt['Fst']['Bld_Kdmp']   = f.readline().split()[0]
-        self.fst_vt['Fst']['NLinTimes']  = f.readline().split()[0]
-        self.fst_vt['Fst']['LinTimes']   = re.findall(r'[^,\s]+', f.readline())[0:2]
+        self.fst_vt['Fst']['Linearize']  = bool(f.readline().split()[0])
+        self.fst_vt['Fst']['CalcSteady'] = bool(f.readline().split()[0])
+        self.fst_vt['Fst']['TrimCase']   = int(f.readline().split()[0])
+        self.fst_vt['Fst']['TrimTol']    = float(f.readline().split()[0])
+        self.fst_vt['Fst']['TrimGain']   = float(f.readline().split()[0])
+        self.fst_vt['Fst']['Twr_Kdmp']   = float(f.readline().split()[0])
+        self.fst_vt['Fst']['Bld_Kdmp']   = float(f.readline().split()[0])
+        self.fst_vt['Fst']['NLinTimes']  = int(f.readline().split()[0])
+        self.fst_vt['Fst']['LinTimes']   = [int(t) for t in f.readline().split('LinTimes')[0].split(',')]#[int(t) for t in re.findall(r'(\d+) (?=Lin)', ln)]
         self.fst_vt['Fst']['LinInputs']  = f.readline().split()[0]
         self.fst_vt['Fst']['LinOutputs'] = f.readline().split()[0]
         self.fst_vt['Fst']['LinOutJac']  = f.readline().split()[0]
@@ -712,7 +712,7 @@ class InputReader_OpenFAST(object):
         # AeroDyn v15.03
 
         ad_file = os.path.join(self.FAST_directory, self.fst_vt['Fst']['AeroFile'])
-        f = open(ad_file)
+        f = open(ad_file) #, encoding='cp1252')
 
         # General Option
         f.readline()
@@ -1285,6 +1285,13 @@ class InputReader_OpenFAST(object):
         self.fst_vt['ServoDyn']['YawManRat'] = float_read(f.readline().split()[0])
         self.fst_vt['ServoDyn']['NacYawF']   = float_read(f.readline().split()[0])
 
+        # Aerodynamic Flow Control
+        f.readline()
+        self.fst_vt['ServoDyn']['AfCmode'] = int(f.readline().split()[0])
+        self.fst_vt['ServoDyn']['AfC_Mean'] = int(f.readline().split()[0])
+        self.fst_vt['ServoDyn']['AfC_Amp'] = int(f.readline().split()[0])
+        self.fst_vt['ServoDyn']['AfC_Phase'] = int(f.readline().split()[0])
+
         # Structural Control
         f.readline()
         self.fst_vt['ServoDyn']['NumBStC']  = int(f.readline().split()[0])
@@ -1295,6 +1302,10 @@ class InputReader_OpenFAST(object):
         self.fst_vt['ServoDyn']['TStCfiles'] = f.readline().split()[0][1:-1]
         self.fst_vt['ServoDyn']['NumSStC'] = int(f.readline().split()[0])
         self.fst_vt['ServoDyn']['SStCfiles'] = f.readline().split()[0][1:-1]
+
+        # Cable Control
+        f.readline()
+        self.fst_vt['ServoDyn']['CCmode'] = int(f.readline().split()[0])
 
         # Bladed Interface and Torque-Speed Look-Up Table (bladed_interface)
         f.readline()
@@ -1682,7 +1693,7 @@ class InputReader_OpenFAST(object):
         ln = f.readline().split()
         ln = f.readline().split()
         for i in range(self.fst_vt['HydroDyn']['NFillGroups']):
-            ln = f.readline().split()
+            ln = f.readline().split('!')[0].split()
             self.fst_vt['HydroDyn']['FillNumM'][i]  = int(ln[0])
             self.fst_vt['HydroDyn']['FillMList'][i] = [int(j) for j in ln[1:-2]]
             self.fst_vt['HydroDyn']['FillFSLoc'][i] = float(ln[-2])
@@ -1855,7 +1866,7 @@ class InputReader_OpenFAST(object):
         ln = f.readline().split()
         ln = f.readline().split()
         for i in range(self.fst_vt['SubDyn']['NMembers']):
-            ln = f.readline().split()
+            ln = f.readline().split('!')[0].split()
             self.fst_vt['SubDyn']['MemberID'][i]    = int(ln[0])
             self.fst_vt['SubDyn']['MJointID1'][i]   = int(ln[1])
             self.fst_vt['SubDyn']['MJointID2'][i]   = int(ln[2])
@@ -2081,91 +2092,186 @@ class InputReader_OpenFAST(object):
 
     def read_MoorDyn(self, moordyn_file):
 
-        f = open(moordyn_file)
+        f = open(moordyn_file, encoding='cp1252')
 
         # MoorDyn
         f.readline()
         f.readline()
         self.fst_vt['MoorDyn']['Echo']     = bool_read(f.readline().split()[0])
+
+        # Line Dictionary
         f.readline()
-        self.fst_vt['MoorDyn']['NTypes']   = int_read(f.readline().split()[0])
+        self.fst_vt['MoorDyn']['NLineTypes']   = int_read(f.readline().split()[0])
         f.readline()
         f.readline()
-        self.fst_vt['MoorDyn']['Name'] = []
-        self.fst_vt['MoorDyn']['Diam']     = []
-        self.fst_vt['MoorDyn']['MassDen']  = []
-        self.fst_vt['MoorDyn']['EA']       = []
-        self.fst_vt['MoorDyn']['BA_zeta']  = []
-        self.fst_vt['MoorDyn']['Can']      = []
-        self.fst_vt['MoorDyn']['Cat']      = []
-        self.fst_vt['MoorDyn']['Cdn']      = []
-        self.fst_vt['MoorDyn']['Cdt']      = []
-        for i in range(self.fst_vt['MoorDyn']['NTypes']):
+        self.fst_vt['MoorDyn']['LineName'] = []
+        self.fst_vt['MoorDyn']['LineDiam']     = []
+        self.fst_vt['MoorDyn']['LineMassDen']  = []
+        self.fst_vt['MoorDyn']['LineEA']       = []
+        self.fst_vt['MoorDyn']['LineBA_zeta']  = []
+        self.fst_vt['MoorDyn']['LineEI']  = []
+        self.fst_vt['MoorDyn']['LineCd']      = []
+        self.fst_vt['MoorDyn']['LineCa']      = []
+        self.fst_vt['MoorDyn']['LineCdAx']      = []
+        self.fst_vt['MoorDyn']['LineCaAx']      = []
+        for i in range(self.fst_vt['MoorDyn']['NLineTypes']):
             data_line = f.readline().strip().split()
-            self.fst_vt['MoorDyn']['Name'].append(str(data_line[0]))
-            self.fst_vt['MoorDyn']['Diam'].append(float(data_line[1]))
-            self.fst_vt['MoorDyn']['MassDen'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['EA'].append(float(data_line[3]))
-            self.fst_vt['MoorDyn']['BA_zeta'].append(float(data_line[4]))
-            self.fst_vt['MoorDyn']['Can'].append(float(data_line[5]))
-            self.fst_vt['MoorDyn']['Cat'].append(float(data_line[6]))
-            self.fst_vt['MoorDyn']['Cdn'].append(float(data_line[7]))
-            self.fst_vt['MoorDyn']['Cdt'].append(float(data_line[8]))
+            self.fst_vt['MoorDyn']['LineName'].append(str(data_line[0]))
+            self.fst_vt['MoorDyn']['LineDiam'].append(float(data_line[1]))
+            self.fst_vt['MoorDyn']['LineMassDen'].append(float(data_line[2]))
+            self.fst_vt['MoorDyn']['LineEA'].append(float(data_line[3]))
+            self.fst_vt['MoorDyn']['LineBA_zeta'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['LineEI'].append(float(data_line[5]))
+            self.fst_vt['MoorDyn']['LineCd'].append(float(data_line[6]))
+            self.fst_vt['MoorDyn']['LineCa'].append(float(data_line[7]))
+            self.fst_vt['MoorDyn']['LineCdAx'].append(float(data_line[8]))
+            self.fst_vt['MoorDyn']['LineCaAx'].append(float(data_line[9]))
+
+        # Rod Types
         f.readline()
-        self.fst_vt['MoorDyn']['NConnects'] = int_read(f.readline().split()[0])
+        self.fst_vt['MoorDyn']['NRodTypes'] = int_read(f.readline().split()[0])
         f.readline()
         f.readline()
-        self.fst_vt['MoorDyn']['Node'] = []
-        self.fst_vt['MoorDyn']['Type'] = []
-        self.fst_vt['MoorDyn']['X']    = []
-        self.fst_vt['MoorDyn']['Y']    = []
-        self.fst_vt['MoorDyn']['Z']    = []
-        self.fst_vt['MoorDyn']['M']    = []
-        self.fst_vt['MoorDyn']['V']    = []
-        self.fst_vt['MoorDyn']['FX']   = []
-        self.fst_vt['MoorDyn']['FY']   = []
-        self.fst_vt['MoorDyn']['FZ']   = []
-        self.fst_vt['MoorDyn']['CdA']  = []
-        self.fst_vt['MoorDyn']['CA']   = []
-        for i in range(self.fst_vt['MoorDyn']['NConnects']):
+        self.fst_vt['MoorDyn']['RodTypeName'] = []
+        self.fst_vt['MoorDyn']['RodDiam'] = []
+        self.fst_vt['MoorDyn']['RodMass/m'] = []
+        self.fst_vt['MoorDyn']['RodCd'] = []
+        self.fst_vt['MoorDyn']['RodCa'] = []
+        self.fst_vt['MoorDyn']['RodCdEnd'] = []
+        self.fst_vt['MoorDyn']['RodCaEnd'] = []
+        for i in range(self.fst_vt['MoorDyn']['NRodTypes']):
             data_line = f.readline().strip().split()
-            self.fst_vt['MoorDyn']['Node'].append(int(data_line[0]))
-            self.fst_vt['MoorDyn']['Type'].append(str(data_line[1]))
-            self.fst_vt['MoorDyn']['X'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['Y'].append(float(data_line[3]))
-            self.fst_vt['MoorDyn']['Z'].append(float(data_line[4]))
-            self.fst_vt['MoorDyn']['M'].append(float(data_line[5]))
-            self.fst_vt['MoorDyn']['V'].append(float(data_line[6]))
-            self.fst_vt['MoorDyn']['FX'].append(float(data_line[7]))
-            self.fst_vt['MoorDyn']['FY'].append(float(data_line[8]))
-            self.fst_vt['MoorDyn']['FZ'].append(float(data_line[9]))
-            self.fst_vt['MoorDyn']['CdA'].append(float(data_line[10]))
-            self.fst_vt['MoorDyn']['CA'].append(float(data_line[11]))
+            self.fst_vt['MoorDyn']['RodTypeName'].append(str(data_line[0]))
+            self.fst_vt['MoorDyn']['RodDiam'].append(float(data_line[1]))
+            self.fst_vt['MoorDyn']['RodMass/m'].append(float(data_line[2]))
+            self.fst_vt['MoorDyn']['RodCd'].append(float(data_line[3]))
+            self.fst_vt['MoorDyn']['RodCa'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['RodCdEnd'].append(float(data_line[5]))
+            self.fst_vt['MoorDyn']['RodCaEnd'].append(float(data_line[6]))
+
+        # Body List
+        f.readline()
+        self.fst_vt['MoorDyn']['NBodies'] = int_read(f.readline().split()[0])
+        f.readline()
+        f.readline()
+        self.fst_vt['MoorDyn']['BodyID'] = []
+        self.fst_vt['MoorDyn']['BodyX0'] = []
+        self.fst_vt['MoorDyn']['BodyY0'] = []
+        self.fst_vt['MoorDyn']['BodyZ0'] = []
+        self.fst_vt['MoorDyn']['Bodyr0'] = []
+        self.fst_vt['MoorDyn']['Bodyp0'] = []
+        self.fst_vt['MoorDyn']['Bodyy0'] = []
+        self.fst_vt['MoorDyn']['BodyXcg'] = []
+        self.fst_vt['MoorDyn']['BodyYcg'] = []
+        self.fst_vt['MoorDyn']['BodyZcg'] = []
+        self.fst_vt['MoorDyn']['BodyM'] = []
+        self.fst_vt['MoorDyn']['BodyV'] = []
+        self.fst_vt['MoorDyn']['BodyI'] = []
+        for i in range(self.fst_vt['MoorDyn']['NBodies']):
+            data_line = f.readline().strip().split()
+            self.fst_vt['MoorDyn']['BodyID'].append(str(data_line[0]))
+            self.fst_vt['MoorDyn']['BodyX0'].append(float(data_line[1]))
+            self.fst_vt['MoorDyn']['BodyY0'].append(float(data_line[2]))
+            self.fst_vt['MoorDyn']['BodyZ0'].append(float(data_line[3]))
+            self.fst_vt['MoorDyn']['Bodyr0'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['Bodyp0'].append(float(data_line[5]))
+            self.fst_vt['MoorDyn']['Bodyy0'].append(float(data_line[6]))
+            self.fst_vt['MoorDyn']['BodyXcg'].append(float(data_line[7]))
+            self.fst_vt['MoorDyn']['BodyYcg'].append(float(data_line[8]))
+            self.fst_vt['MoorDyn']['BodyZcg'].append(float(data_line[9]))
+            self.fst_vt['MoorDyn']['BodyM'].append(float(data_line[10]))
+            self.fst_vt['MoorDyn']['BodyV'].append(float(data_line[11]))
+            self.fst_vt['MoorDyn']['BodyI'].append(float(data_line[12]))
+
+        # Rod Properties
+        f.readline()
+        self.fst_vt['MoorDyn']['NRods'] = int_read(f.readline().split()[0])
+        f.readline()
+        f.readline()
+        self.fst_vt['MoorDyn']['RodID'] = []
+        self.fst_vt['MoorDyn']['RodBodyID'] = []
+        self.fst_vt['MoorDyn']['RodType'] = []
+        self.fst_vt['MoorDyn']['RodXa'] = []
+        self.fst_vt['MoorDyn']['RodYa'] = []
+        self.fst_vt['MoorDyn']['RodZa'] = []
+        self.fst_vt['MoorDyn']['RodXb'] = []
+        self.fst_vt['MoorDyn']['RodYb'] = []
+        self.fst_vt['MoorDyn']['RodZb'] = []
+        self.fst_vt['MoorDyn']['RodNumSegs'] = []
+        self.fst_vt['MoorDyn']['RodOutputs'] = []
+        for i in range(self.fst_vt['MoorDyn']['NRods']):
+            data_line = f.readline().strip().split()
+            self.fst_vt['MoorDyn']['RodID'].append(str(data_line[0]))
+            self.fst_vt['MoorDyn']['RodBodyID'].append(str(data_line[1]))
+            self.fst_vt['MoorDyn']['RodType'].append(str(data_line[2]))
+            self.fst_vt['MoorDyn']['RodXa'].append(float(data_line[3]))
+            self.fst_vt['MoorDyn']['RodYa'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['RodZa'].append(float(data_line[5]))
+            self.fst_vt['MoorDyn']['RodXb'].append(float(data_line[6]))
+            self.fst_vt['MoorDyn']['RodYb'].append(float(data_line[7]))
+            self.fst_vt['MoorDyn']['RodZb'].append(float(data_line[8]))
+            self.fst_vt['MoorDyn']['RodNumSegs'].append(int(data_line[9]))
+            self.fst_vt['MoorDyn']['RodOutputs'].append(str(data_line[10]))
+
+        # Node Properties
+        f.readline()
+        self.fst_vt['MoorDyn']['NNodes'] = int_read(f.readline().split()[0])
+        f.readline()
+        f.readline()
+        self.fst_vt['MoorDyn']['NodePointID'] = []
+        self.fst_vt['MoorDyn']['NodeType'] = []
+        self.fst_vt['MoorDyn']['NodeX']    = []
+        self.fst_vt['MoorDyn']['NodeY']    = []
+        self.fst_vt['MoorDyn']['NodeZ']    = []
+        self.fst_vt['MoorDyn']['NodeM']    = []
+        self.fst_vt['MoorDyn']['NodeV']    = []
+        self.fst_vt['MoorDyn']['NodeCdA']  = []
+        self.fst_vt['MoorDyn']['NodeCa']   = []
+        for i in range(self.fst_vt['MoorDyn']['NNodes']):
+            data_line = f.readline().strip().split()
+            self.fst_vt['MoorDyn']['NodePointID'].append(int(data_line[0]))
+            self.fst_vt['MoorDyn']['NodeType'].append(str(data_line[1]))
+            self.fst_vt['MoorDyn']['NodeX'].append(float(data_line[2]))
+            self.fst_vt['MoorDyn']['NodeY'].append(float(data_line[3]))
+            self.fst_vt['MoorDyn']['NodeZ'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['NodeM'].append(float(data_line[5]))
+            self.fst_vt['MoorDyn']['NodeV'].append(float(data_line[6]))
+            self.fst_vt['MoorDyn']['NodeCdA'].append(float(data_line[7]))
+            self.fst_vt['MoorDyn']['NodeCa'].append(float(data_line[8]))
+
+        # Line Properties
         f.readline()
         self.fst_vt['MoorDyn']['NLines'] = int_read(f.readline().split()[0])
         f.readline()
         f.readline()
-        self.fst_vt['MoorDyn']['Line']          = []
+        self.fst_vt['MoorDyn']['LineID']          = []
         self.fst_vt['MoorDyn']['LineType']      = []
-        self.fst_vt['MoorDyn']['UnstrLen']      = []
-        self.fst_vt['MoorDyn']['NumSegs']       = []
-        self.fst_vt['MoorDyn']['NodeAnch']      = []
-        self.fst_vt['MoorDyn']['NodeFair']      = []
-        self.fst_vt['MoorDyn']['Outputs']       = []
-        self.fst_vt['MoorDyn']['CtrlChan']      = []
+        self.fst_vt['MoorDyn']['LineUnstrLen']      = []
+        self.fst_vt['MoorDyn']['LineNumSegs']       = []
+        self.fst_vt['MoorDyn']['LineAttachA']      = []
+        self.fst_vt['MoorDyn']['LineAttachB']      = []
+        self.fst_vt['MoorDyn']['LineOutputs']       = []
+        self.fst_vt['MoorDyn']['LineCtrlChan']       = []
         for i in range(self.fst_vt['MoorDyn']['NLines']):
             data_line = f.readline().strip().split()
-            self.fst_vt['MoorDyn']['Line'].append(int(data_line[0]))
+            self.fst_vt['MoorDyn']['LineID'].append(int(data_line[0]))
             self.fst_vt['MoorDyn']['LineType'].append(str(data_line[1]))
-            self.fst_vt['MoorDyn']['UnstrLen'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['NumSegs'].append(int(data_line[3]))
-            self.fst_vt['MoorDyn']['NodeAnch'].append(int(data_line[4]))
-            self.fst_vt['MoorDyn']['NodeFair'].append(int(data_line[5]))
-            self.fst_vt['MoorDyn']['Outputs'].append(str(data_line[6]))
+            self.fst_vt['MoorDyn']['LineUnstrLen'].append(float(data_line[2]))
+            self.fst_vt['MoorDyn']['LineNumSegs'].append(int(data_line[3]))
+            self.fst_vt['MoorDyn']['LineAttachA'].append(int(data_line[4]))
+            self.fst_vt['MoorDyn']['LineAttachB'].append(int(data_line[5]))
+            self.fst_vt['MoorDyn']['LineOutputs'].append(str(data_line[6]))
             if len(data_line) > 7:
-                self.fst_vt['MoorDyn']['CtrlChan'].append(int(data_line[7]))
+                self.fst_vt['MoorDyn']['LineCtrlChan'].append(int(data_line[7]))
             else:
-                self.fst_vt['MoorDyn']['CtrlChan'].append(0)
+                self.fst_vt['MoorDyn']['LineCtrlChan'].append(0)
+
+        # Controls
+        f.readline()
+        f.readline()
+        f.readline()
+
+        # Solver Options
         f.readline()
         self.fst_vt['MoorDyn']['dtM']       = float_read(f.readline().split()[0])
         self.fst_vt['MoorDyn']['kbot']      = float_read(f.readline().split()[0])
@@ -2174,6 +2280,7 @@ class InputReader_OpenFAST(object):
         self.fst_vt['MoorDyn']['TmaxIC']    = float_read(f.readline().split()[0])
         self.fst_vt['MoorDyn']['CdScaleIC'] = float_read(f.readline().split()[0])
         self.fst_vt['MoorDyn']['threshIC']  = float_read(f.readline().split()[0])
+        self.fst_vt['MoorDyn']['WaterKin']  = int_read(f.readline().split()[0])
         f.readline()
 
         data = f.readline()
