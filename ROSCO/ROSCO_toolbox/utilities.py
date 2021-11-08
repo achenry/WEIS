@@ -131,7 +131,7 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('!------- WIND SPEED ESTIMATOR ---------------------------------------------\n')
     file.write('{:<13.3f}       ! WE_BladeRadius	- Blade length (distance from hub center to blade tip), [m]\n'.format(turbine.rotor_radius))
     file.write('{:<11d}         ! WE_CP_n			- Amount of parameters in the Cp array\n'.format(1))
-    file.write('{}              ! WE_CP - Parameters that define the parameterized CP(lambda) function\n'.format(''.join('{:<2.1f} '.format(0.0) for i in range(1))))
+    file.write('{}              ! WE_CP - Parameters that define the parameterized CP(lambda) function\n'.format(''.join('{:<2.1f} '.format(0.0) for i in range(4))))
     file.write('{:<13.1f}		! WE_Gamma			- Adaption gain of the wind speed estimator algorithm [m/rad]\n'.format(0.0))
     file.write('{:<13.1f}       ! WE_GearboxRatio	- Gearbox ratio [>=1],  [-]\n'.format(turbine.Ng))
     file.write('{:<014.5f}      ! WE_Jtot			- Total drivetrain inertia, including blades, hub and casted generator inertia to LSS, [kg m^2]\n'.format(turbine.J))
@@ -203,11 +203,11 @@ def read_DISCON(DISCON_filename):
         for line in discon:
 
             # Skip whitespace and comment lines
-            if (line[0] != '!') == (len(line.strip()) != 0):
+            if (line[0] != '!') and (len(line.strip()) != 0):
                 
                 if (line.split()[1] != '!'):    # Array valued entries
                     array_length = line.split().index('!')
-                    param = line.split()[array_length+1]
+                    param = line.split()[array_length + 1]
                     values = np.array( [float(x) for x in line.split()[:array_length]] )
                     DISCON_in[param] = values
                 else:                           # All other entries

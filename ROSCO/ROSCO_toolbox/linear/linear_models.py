@@ -48,8 +48,13 @@ class LinearTurbineModel(object):
             if load_parallel:
                 import time
                 t1 = time.time()
-                all_linfiles = [[os.path.realpath(os.path.join(
-                    lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin+1))) for i_lin in range(0, nlin)] for iCase in range(0,n_lin_cases)]
+                if type(lin_file_dir) is list:
+                    all_linfiles = [[os.path.realpath(os.path.join(
+                        lin_file_dir[iCase], lin_file_names[iCase] + '.{}.lin'.format(i_lin + 1))) for i_lin in range(0, nlin)]
+                        for iCase in range(0, n_lin_cases)]
+                else:
+                    all_linfiles = [[os.path.realpath(os.path.join(
+                        lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin+1))) for i_lin in range(0, nlin)] for iCase in range(0,n_lin_cases)]
                 cores = mp.cpu_count()
                 pool = mp.Pool(cores)
                 all_MBC, all_matData, all_FAST_linData = zip(*pool.map(run_mbc3, all_linfiles))
@@ -60,8 +65,14 @@ class LinearTurbineModel(object):
                 import time
                 t1 = time.time()
                 for iCase in range(0, n_lin_cases):
-                    lin_files_i = [os.path.realpath(os.path.join(
-                        lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin+1))) for i_lin in range(0, nlin)]
+                    if type(lin_file_dir) is list:
+                        lin_files_i = [os.path.realpath(os.path.join(
+                            lin_file_dir[iCase], lin_file_names[iCase] + '.{}.lin'.format(i_lin+1))) for i_lin in range(0, nlin)]
+                    else:
+                        lin_files_i = [os.path.realpath(os.path.join(
+                            lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin + 1))) for i_lin in
+                            range(0, nlin)]
+
                     MBC, matData, FAST_linData = run_mbc3(lin_files_i)
                     all_MBC.append(MBC)
                     all_matData.append(matData)
@@ -259,6 +270,31 @@ class LinearTurbineModel(object):
             self.ind_fast_outs = matDict['indOuts'][0] - 1
             # self.ind_fast_outs       = matDict['indOuts'][0][0] - 1
 
+    # Save function
+    def save(self, filename):
+        '''
+        Save turbine to pickle
+
+        Parameters:
+        ----------
+        filename : str
+                   Name of file to save pickle
+        # '''
+        pickle.dump(self, open(filename, "wb"))
+
+    # Load function
+    @staticmethod
+    def load(filename):
+        '''
+        Load linear model from pickle - outdated, but might be okay!!
+
+        Parameters:
+        ----------
+        filename : str
+                   Name of pickle file
+        '''
+        linmodel = pickle.load(open(filename, 'rb'))
+        return linmodel
 
     def get_plant_op(self, u_rot, reduce_states):
         '''
