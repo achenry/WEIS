@@ -130,6 +130,16 @@ TYPE, PUBLIC :: ControlParameters
     REAL(8)                             :: VS_MaxOMTq                   ! Maximum torque at the end of the below-rated region 2, [Nm]
     REAL(8)                             :: VS_MinOMTq                   ! Minimum torque at the beginning of the below-rated region 2, [Nm]
 
+    CHARACTER(1024)                     :: OL_Filename                  ! Input file with open loop timeseries
+    INTEGER(4)                          :: OL_Mode                      ! - Open loop control mode {0: no open loop control, 1: open loop control vs. time, 2: open loop control vs. wind speed}
+    INTEGER(4)                          :: Ind_Breakpoint               ! The column in OL_Filename that contains the breakpoint (time if OL_Mode = 1)
+    INTEGER(4)                          :: Ind_BldPitch                 ! The column in OL_Filename that contains the blade pitch input in rad
+    INTEGER(4)                          :: Ind_GenTq                    ! The column in OL_Filename that contains the generator torque in Nm
+    REAL(8), DIMENSION(:), ALLOCATABLE  :: OL_Breakpoints               ! Open loop breakpoints in timeseries
+    REAL(8), DIMENSION(:), ALLOCATABLE  :: OL_BldPitch                  ! Open blade pitch timeseries
+    REAL(8), DIMENSION(:), ALLOCATABLE  :: OL_GenTq                     ! Open generator torque timeseries
+    REAL(8), DIMENSION(:,:), ALLOCATABLE  :: OL_Channels                ! Open loop channels in timeseries
+
 END TYPE ControlParameters
 
 TYPE, PUBLIC :: LocalVariables

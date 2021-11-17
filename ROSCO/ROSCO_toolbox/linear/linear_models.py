@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import multiprocessing as mp
 from itertools import chain
 from scipy.io import loadmat
+import pickle
 
 try:
     import pyFAST.linearization.mbc.mbc3 as mbc
@@ -408,7 +409,7 @@ class LinearTurbineModel(object):
         u_h = disturbance['Wind']
 
         # Get plant operating point
-        self.ops, self.P_op = self.get_plant_op(u_h, reduce_states)
+        self.ops, P_op = self.get_plant_op(u_h, reduce_states)
 
         if not open_loop:
             if isinstance(controller, LinearControlModel):
@@ -424,7 +425,7 @@ class LinearTurbineModel(object):
         u_lin[indWind, :] = u_h - self.ops['uh']
 
         # linear solve
-        _, y_lin, xx = co.forced_response(P_op, T=tt, U=u_lin)
+        _, y_lin, xx = co.forced_response(P_op, T=tt, U=u_lin, return_x=True)
 
         # Add back in operating points
         # Note that bld pitch was an input operating point that we are moving to the output operating point
@@ -530,7 +531,7 @@ class LinearTurbineModel(object):
 
         # Trim Descriptions
         self.DescStates     = np.array(self.DescStates)[indStates].squeeze().tolist()  
-        self.x_ops          = self.x_ops[indStates].squeeze()
+        self.x_ops          = np.vstack(self.x_ops[indStates])#.squeeze()
         self.StateDerivOrder = np.array(self.StateDerivOrder)[indStates].squeeze().tolist()
         self.DescCntrlInpt  = np.array(self.DescCntrlInpt)[indInputs].squeeze().tolist()
         self.DescOutput     = np.array(self.DescOutput)[indOutputs].squeeze().tolist()

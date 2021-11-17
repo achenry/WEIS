@@ -116,6 +116,8 @@ class runFAST_pywrapper(object):
         self.magnitude_channels = magnitude_channels_default
         self.fatigue_channels = fatigue_channels_default
         self.la = None  # Will be initialized on first run through
+        self.reader = None
+        self.writer = None
 
         self.overwrite_outfiles = True  # True: existing output files will be overwritten, False: if output file with the same name already exists, OpenFAST WILL NOT RUN; This is primarily included for code debugging with OpenFAST in the loop or for specific Optimization Workflows where OpenFAST is to be run periodically instead of for every objective function anaylsis
 
@@ -136,9 +138,8 @@ class runFAST_pywrapper(object):
                 fatigue_channels=self.fatigue_channels,
                 # extreme_channels=channel_extremes_default,
             )
-
-    def execute(self):
-
+            
+    def setup(self):
         # FAST version specific initialization
         reader = InputReader_OpenFAST()
         writer = InputWriter_OpenFAST()
@@ -167,12 +168,18 @@ class runFAST_pywrapper(object):
             writer.FAST_yamlfile = self.FAST_yamlfile_out
             writer.write_yaml()
 
+        self.reader = reader
+        self.writer = writer
+
         # Make sure pCrunch is ready
         self.init_crunch()
+        return self
+
+    def execute(self): 
 
         if not self.use_exe:  # Use library
 
-            FAST_directory = os.path.split(writer.FAST_InputFileOut)[0]
+            FAST_directory = os.path.split(self.writer.FAST_InputFileOut)[0]
 
             orig_dir = os.getcwd()
             os.chdir(FAST_directory)
@@ -196,14 +203,12 @@ class runFAST_pywrapper(object):
         else:  # use executable
             wrapper = FAST_wrapper()
 
-            # TODO openfast execution does not work for rewritten input files
             # Run FAST
             wrapper.FAST_exe = self.FAST_exe
-            # wrapper.FAST_InputFile = self.FAST_InputFile
-            # wrapper.FAST_directory =  self.FAST_directory
-            wrapper.FAST_InputFile = os.path.split(writer.FAST_InputFileOut)[1]
-            wrapper.FAST_directory =  os.path.split(writer.FAST_InputFileOut)[0]
+            wrapper.FAST_InputFile = os.path.split(self.writer.FAST_InputFileOut)[1]
+            wrapper.FAST_directory =  os.path.split(self.writer.FAST_InputFileOut)[0]
 
+            # TODO
             FAST_Output = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'outb')
             FAST_Output_txt = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'out')
 
@@ -218,7 +223,7 @@ class runFAST_pywrapper(object):
             if os.path.exists(FAST_Output):
                 output = OpenFASTBinary(FAST_Output, magnitude_channels=self.magnitude_channels)
             elif os.path.exists(FAST_Output_txt):
-                output = OpenFASTAscii(FAST_Output, magnitude_channels=self.magnitude_channels)
+                output = OpenFASTAscii(FAST_Output_txt, magnitude_channels=self.magnitude_channels)
 
             output.read()
 
@@ -269,6 +274,9 @@ class runFAST_pywrapper_batch(object):
 
         self.post = None
 
+        self.reader = None
+        self.writer = None
+
         # Optional population class attributes from key word arguments
         for (k, w) in kwargs.items():
             try:
@@ -315,6 +323,18 @@ class runFAST_pywrapper_batch(object):
 
         return case_data_all
 
+    def setup_serial(self):
+        # Run batch serially
+        if not os.path.exists(self.FAST_runDirectory):
+            os.makedirs(self.FAST_runDirectory)
+
+        self.init_crunch()
+
+        case_data_all = self.create_case_data()
+
+        for c in case_data_all:
+            setup_serial(c)
+    
     def run_serial(self):
         # Run batch serially
         if not os.path.exists(self.FAST_runDirectory):
@@ -340,6 +360,22 @@ class runFAST_pywrapper_batch(object):
         summary_stats, extreme_table, DELs, Damage = self.la.post_process(ss, et, dl, dam)
 
         return summary_stats, extreme_table, DELs, Damage, ct
+    
+    def setup_multi(self, cores=None):
+        if not os.path.exists(self.FAST_runDirectory):
+            os.makedirs(self.FAST_runDirectory)
+
+        if not cores:
+            cores = mp.cpu_count()
+        pool = mp.Pool(cores)
+
+        self.init_crunch()
+
+        case_data_all = self.create_case_data()
+
+        output = pool.map(setup_multi, case_data_all)
+        pool.close()
+        pool.join()
 
     def run_multi(self, cores=None):
         # Run cases in parallel, threaded with multiprocessing module
@@ -430,6 +466,30 @@ class runFAST_pywrapper_batch(object):
         return summary_stats, extreme_table, DELs, Damage, ct
 
 
+def setup_serial(indict):
+    # Batch FAST pyWrapper call, as a function outside the runFAST_pywrapper_batch class for pickle-ablility
+
+    # Could probably do this with vars(fast), but this gives tighter control
+    known_keys = ['case', 'case_name', 'FAST_exe', 'FAST_lib', 'FAST_runDirectory',
+                  'FAST_InputFile', 'FAST_directory', 'read_yaml', 'FAST_yamlfile_in', 'fst_vt',
+                  'write_yaml', 'FAST_yamlfile_out', 'channels', 'overwrite_outfiles', 'keep_time',
+                  'goodman', 'magnitude_channels', 'fatigue_channels', 'post', 'use_exe']
+
+    fast = runFAST_pywrapper()
+    for k in indict:
+        if k == 'case_name':
+            fast.FAST_namingOut = indict['case_name']
+        elif k in known_keys:
+            setattr(fast, k, indict[k])
+        else:
+            print(f'WARNING: Unknown OpenFAST executation parameter, {k}')
+    return fast.setup()
+
+def setup_multi(indict):
+    # helper function for running with multiprocessing.Pool.map
+    # converts list of arguement values to arguments
+    return setup(indict)
+
 def evaluate(indict):
     # Batch FAST pyWrapper call, as a function outside the runFAST_pywrapper_batch class for pickle-ablility
 
@@ -447,7 +507,8 @@ def evaluate(indict):
             setattr(fast, k, indict[k])
         else:
             print(f'WARNING: Unknown OpenFAST executation parameter, {k}')
-
+    if fast.fst_vt == {}:
+        fast.setup()
     return fast.execute()
 
 

@@ -1231,6 +1231,11 @@ class InputWriter_OpenFAST(object):
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['TYawManS'], 'TYawManS', '- Time to start override yaw maneuver and end standard yaw control (s)\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['YawManRat'], 'YawManRat', '- Yaw maneuver rate (in absolute value) (deg/s)\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['NacYawF'], 'NacYawF', '- Final yaw angle for override yaw maneuvers (degrees)\n'))
+        f.write('---------------------- AERODYNAMIC FLOW CONTROL -------------------------------------\n')
+        f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['AfCmode'], 'AfCmode', '- Airfoil control mode {0: none, 1: cosine wave cycle, 4: user-defined from Simulink/Labview, 5: user-defined from Bladed-style DLL} (switch)\n'))
+        f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['AfC_Mean'], 'AfC_Mean', '- Mean level for cosine cycling or steady value (-) [used only with AfCmode==1]\n'))
+        f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['AfC_Amp'], 'AfC_Amp', '- Amplitude for for cosine cycling of flap signal (-) [used only with AfCmode==1]\n'))
+        f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['AfC_Phase'], 'AfC_Phase', '- Phase relative to the blade azimuth (0 is vertical) for for cosine cycling of flap signal (deg) [used only with AfCmode==1]\n'))
         f.write('---------------------- STRUCTURAL CONTROL ---------------------------------------\n')
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['NumBStC'], 'NumBStC', '- Number of blade structural controllers (integer)\n'))
         f.write('{!s:<22} {:<11} {:}'.format('"'+self.fst_vt['ServoDyn']['BStCfiles']+'"', 'BStCfiles', '- Name of the file for blade tuned mass damper (quoted string) [unused when CompNTMD is false]\n'))
@@ -1240,6 +1245,8 @@ class InputWriter_OpenFAST(object):
         f.write('{!s:<22} {:<11} {:}'.format('"'+self.fst_vt['ServoDyn']['TStCfiles']+'"', 'TStCfiles', '- Name of the file for tower tuned mass damper (quoted string) [unused when CompNTMD is false]\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['NumSStC'], 'NumSStC', '- Number of sbustructure structural controllers (integer)\n'))
         f.write('{!s:<22} {:<11} {:}'.format('"'+self.fst_vt['ServoDyn']['SStCfiles']+'"', 'SStCfiles', '- Name of the file for sbustructure tuned mass damper (quoted string) [unused when CompNTMD is false]\n'))
+        f.write('---------------------- CABLE CONTROL -------------------------------------------\n')
+        f.write('{:<22} {:<11} {:}'.format(self.fst_vt['ServoDyn']['CCmode'], 'CCmode', '- Cable control mode {0: none, 4: user-defined from Simulink/Labview, 5: user-defined from Bladed-style DLL} (switch)\n'))
         f.write('---------------------- BLADED INTERFACE ---------------------------------------- [used only with Bladed Interface]\n')
         f.write('{:<22} {:<11} {:}'.format('"'+self.fst_vt['ServoDyn']['DLL_FileName']+'"', 'DLL_FileName', '- Name/location of the dynamic library {.dll [Windows] or .so [Linux]} in the Bladed-DLL format (-) [used only with Bladed Interface]\n'))
         f.write('{:<22} {:<11} {:}'.format('"'+self.fst_vt['ServoDyn']['DLL_InFile']+'"', 'DLL_InFile', '- Name of input file sent to the DLL (-) [used only with Bladed Interface]\n'))
@@ -1307,6 +1314,7 @@ class InputWriter_OpenFAST(object):
         controller.SD_Mode              = int(self.fst_vt['DISCON_in']['SD_Mode'])
         controller.Fl_Mode              = int(self.fst_vt['DISCON_in']['Fl_Mode'])
         controller.Flp_Mode             = int(self.fst_vt['DISCON_in']['Flp_Mode'])
+        controller.OL_Mode              = int(self.fst_vt['DISCON_in']['OL_Mode'])
         controller.F_LPFDamping         = self.fst_vt['DISCON_in']['F_LPFDamping']
         controller.ss_cornerfreq        = self.fst_vt['DISCON_in']['F_SSCornerFreq']
         controller.pitch_op_pc          = self.fst_vt['DISCON_in']['PC_GS_angles']
@@ -1339,6 +1347,12 @@ class InputWriter_OpenFAST(object):
         controller.flp_maxpit           = self.fst_vt['DISCON_in']['Flp_MaxPit']
         controller.twr_freq             = self.fst_vt['DISCON_in']['F_NotchCornerFreq'] 
         controller.ptfm_freq            = self.fst_vt['DISCON_in']['F_FlCornerFreq'][0]
+
+
+        controller.ol_filename           = self.fst_vt['DISCON_in']['OL_Filename']
+        controller.ind_breakpoint        = int(self.fst_vt['DISCON_in']['Ind_Breakpoint'])
+        controller.ind_bldpitch          = int(self.fst_vt['DISCON_in']['Ind_BldPitch'])
+        controller.ind_gentq             = int(self.fst_vt['DISCON_in']['Ind_GenTq'])
 
         turbine = type('', (), {})()
         turbine.Cp = type('', (), {})()
@@ -1384,7 +1398,7 @@ class InputWriter_OpenFAST(object):
         
         # Write DISCON input files
         ROSCO_utilities.write_rotor_performance(turbine, txt_filename=txt_filename)
-        ROSCO_utilities.write_DISCON(turbine,controller,param_file=discon_in_file, txt_filename=txt_filename)
+        ROSCO_utilities.write_DISCON(turbine,controller, param_file=discon_in_file, txt_filename=txt_filename)
 
     def write_HydroDyn(self):
 

@@ -341,9 +341,9 @@ class LinearTurbineModel(object):
         u_h     = disturbance['Wind']
 
         # Get plant operating point
-        self.ops, self.P_op        = self.get_plant_op(u_h,reduce_states)
+        self.ops, self.P_op        = self.get_plant_op(u_h, reduce_states)
 
-        if not controller or isinstance(controller,ROSCO_ControllerInterface):      
+        if not controller or isinstance(controller, ROSCO_ControllerInterface):
             P_op = self.P_op                        # keep open loop model
         elif isinstance(controller,LinearControlModel):
             P_op = self.add_control(controller)     # add linear control to make closed loop model
@@ -364,7 +364,7 @@ class LinearTurbineModel(object):
         # linearize wind 
         lin_wind        = u_h - self.ops['uh']
 
-        if isinstance(controller,ROSCO_ControllerInterface):   
+        if isinstance(controller, ROSCO_ControllerInterface):
 
             # Set simulation params
             rotor_rpm_init  = 10.
@@ -396,7 +396,7 @@ class LinearTurbineModel(object):
                 if k == 0:
                     continue # Skip the first run
                 
-                # Call the controller
+                # Call the controller TODO update to fetch bld_pitch control from file?
                 gen_torque[k], bld_pitch[k] = controller.call_controller(t,dt,bld_pitch[k-1],gen_torque[k-1],gen_speed[k-1],0.95,rot_speed[k-1],u_h[k-1],nac_accel[k-1])
 
                 # Set inputs:

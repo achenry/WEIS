@@ -474,5 +474,5 @@ class OpenFASTAscii(OpenFASTBase):
     def build_headers(self, chandata, unitdata):
         """Unpacks channels and units and builds the combined headers."""
 
-        self.channels = np.array([c for c in chandata.split("\t")])
-        self.units = np.array([u[1:-1] for u in unitdata.split("\t")])
+        self.channels = np.array([c for c in chandata.split()]) # was seperated by \t
+        self.units = np.array([u[1:-1] for u in unitdata.split()]) # was seperated by \t

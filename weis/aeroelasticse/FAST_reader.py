@@ -1289,9 +1289,9 @@ class InputReader_OpenFAST(object):
         # Aerodynamic Flow Control
         f.readline()
         self.fst_vt['ServoDyn']['AfCmode'] = int(f.readline().split()[0])
-        self.fst_vt['ServoDyn']['AfC_Mean'] = int(f.readline().split()[0])
-        self.fst_vt['ServoDyn']['AfC_Amp'] = int(f.readline().split()[0])
-        self.fst_vt['ServoDyn']['AfC_Phase'] = int(f.readline().split()[0])
+        self.fst_vt['ServoDyn']['AfC_Mean'] = float_read(f.readline().split()[0])
+        self.fst_vt['ServoDyn']['AfC_Amp'] = float_read(f.readline().split()[0])
+        self.fst_vt['ServoDyn']['AfC_Phase'] = float_read(f.readline().split()[0])
 
         # Structural Control
         f.readline()

@@ -119,7 +119,7 @@ class ControllerInterface():
         data = self.avrSWAP.astype(np.float32)
         p_data = data.ctypes.data_as(c_float_p)
 
-        # Run DISCON
+        # Run DISCON TODO
         self.discon.DISCON(p_data, byref(self.aviFAIL), self.accINFILE, self.avcOUTNAME, self.avcMSG)
 
         # Push back to avr swap
