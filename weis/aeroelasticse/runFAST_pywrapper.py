@@ -210,11 +210,15 @@ class runFAST_pywrapper(object):
 
             # TODO
             FAST_Output = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'outb')
+            FAST_SFunc_Output = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'SFunc.outb')
             FAST_Output_txt = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'out')
+            FAST_SFunc_Output_txt = os.path.join(wrapper.FAST_directory, wrapper.FAST_InputFile[:-3] + 'SFunc.out')
 
             # check if OpenFAST is set not to overwrite existing output files, TODO: move this further up in the workflow for minor computation savings
             if self.overwrite_outfiles or (not self.overwrite_outfiles and not (
-                    os.path.exists(FAST_Output) or os.path.exists(FAST_Output_txt))):
+                    os.path.exists(FAST_Output) or os.path.exists(FAST_Output_txt))
+                                           or os.path.exists(FAST_SFunc_Output)
+                                           or os.path.exists(FAST_SFunc_Output_txt)):
                 wrapper.execute()
             else:
                 print(
@@ -222,8 +226,12 @@ class runFAST_pywrapper(object):
 
             if os.path.exists(FAST_Output):
                 output = OpenFASTBinary(FAST_Output, magnitude_channels=self.magnitude_channels)
+            elif os.path.exists(FAST_SFunc_Output):
+                output = OpenFASTBinary(FAST_SFunc_Output, magnitude_channels=self.magnitude_channels)
             elif os.path.exists(FAST_Output_txt):
                 output = OpenFASTAscii(FAST_Output_txt, magnitude_channels=self.magnitude_channels)
+            elif os.path.exists(FAST_SFunc_Output_txt):
+                output = OpenFASTAscii(FAST_SFunc_Output_txt, magnitude_channels=self.magnitude_channels)
 
             output.read()
 
@@ -373,7 +381,7 @@ class runFAST_pywrapper_batch(object):
 
         case_data_all = self.create_case_data()
 
-        output = pool.map(setup_multi, case_data_all)
+        output = pool.map(setup_serial, case_data_all)
         pool.close()
         pool.join()
 
@@ -488,7 +496,7 @@ def setup_serial(indict):
 def setup_multi(indict):
     # helper function for running with multiprocessing.Pool.map
     # converts list of arguement values to arguments
-    return setup(indict)
+    return setup_serial(indict)
 
 def evaluate(indict):
     # Batch FAST pyWrapper call, as a function outside the runFAST_pywrapper_batch class for pickle-ablility
