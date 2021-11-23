@@ -1773,7 +1773,8 @@ class InputReader_OpenFAST(object):
         self.fst_vt['SubDyn']['SDdeltaT']  = float_read(f.readline().split()[0])
         self.fst_vt['SubDyn']['IntMethod'] = int(f.readline().split()[0])
         self.fst_vt['SubDyn']['SttcSolve'] = bool_read(f.readline().split()[0])
-        self.fst_vt['SubDyn']['GuyanLoadCorrection'] = bool_read(f.readline().split()[0])
+        # self.fst_vt['SubDyn']['GuyanLoadCorrection'] = bool_read(f.readline().split()[0])
+        self.fst_vt['SubDyn']['ExtraMoment'] = bool_read(f.readline().split()[0])
         f.readline()
         # FEA and CRAIG-BAMPTON PARAMETERS
         self.fst_vt['SubDyn']['FEMMod']    = int(f.readline().split()[0])
@@ -1797,6 +1798,7 @@ class InputReader_OpenFAST(object):
         self.fst_vt['SubDyn']['JointDirY']  = [None]*self.fst_vt['SubDyn']['NJoints']
         self.fst_vt['SubDyn']['JointDirZ']  = [None]*self.fst_vt['SubDyn']['NJoints']
         self.fst_vt['SubDyn']['JointStiff']  = [None]*self.fst_vt['SubDyn']['NJoints']
+        self.fst_vt['SubDyn']['JointDamp']  = [None]*self.fst_vt['SubDyn']['NJoints']
         ln = f.readline().split()
         ln = f.readline().split()
         for i in range(self.fst_vt['SubDyn']['NJoints']):
@@ -1810,6 +1812,7 @@ class InputReader_OpenFAST(object):
             self.fst_vt['SubDyn']['JointDirY'][i]   = float(ln[6])
             self.fst_vt['SubDyn']['JointDirZ'][i]   = float(ln[7])
             self.fst_vt['SubDyn']['JointStiff'][i]   = float(ln[8])
+            self.fst_vt['SubDyn']['JointDamp'][i] = float(ln[9])
         f.readline()
         # BASE REACTION JOINTS
         self.fst_vt['SubDyn']['NReact']   = int(f.readline().split()[0])
@@ -1820,7 +1823,7 @@ class InputReader_OpenFAST(object):
         self.fst_vt['SubDyn']['RctRDXss'] = [None]*self.fst_vt['SubDyn']['NReact']
         self.fst_vt['SubDyn']['RctRDYss'] = [None]*self.fst_vt['SubDyn']['NReact']
         self.fst_vt['SubDyn']['RctRDZss'] = [None]*self.fst_vt['SubDyn']['NReact']
-        self.fst_vt['SubDyn']['Rct_SoilFile'] = [None]*self.fst_vt['SubDyn']['NReact']
+        self.fst_vt['SubDyn']['SSIfile'] = [None]*self.fst_vt['SubDyn']['NReact']
         ln = f.readline().split()
         ln = f.readline().split()
         for i in range(self.fst_vt['SubDyn']['NReact']):
@@ -1832,7 +1835,7 @@ class InputReader_OpenFAST(object):
             self.fst_vt['SubDyn']['RctRDXss'][i] = int(ln[4])
             self.fst_vt['SubDyn']['RctRDYss'][i] = int(ln[5])
             self.fst_vt['SubDyn']['RctRDZss'][i] = int(ln[6])
-            self.fst_vt['SubDyn']['Rct_SoilFile'][i] = ln[7]
+            self.fst_vt['SubDyn']['SSIfile'][i] = int(ln[7])
         f.readline()
         # INTERFACE JOINTS
         self.fst_vt['SubDyn']['NInterf']   = int(f.readline().split()[0])
@@ -1929,14 +1932,16 @@ class InputReader_OpenFAST(object):
         self.fst_vt['SubDyn']['CableEA']        = [None]*self.fst_vt['SubDyn']['NCablePropSets']
         self.fst_vt['SubDyn']['CableMatDens']   = [None]*self.fst_vt['SubDyn']['NCablePropSets']
         self.fst_vt['SubDyn']['CableT0']        = [None]*self.fst_vt['SubDyn']['NCablePropSets']
+        self.fst_vt['SubDyn']['CtrlChannel']    = [None]*self.fst_vt['SubDyn']['NCablePropSets']
         f.readline()
         f.readline()
         for i in range(self.fst_vt['SubDyn']['NCablePropSets']):
             ln = f.readline().split()
             self.fst_vt['SubDyn']['CablePropSetID'][i] = int(ln[0])
             self.fst_vt['SubDyn']['CableEA'][i]        = float(ln[1])
-            self.fst_vt['SubDyn']['CableMatDens'][i]   = float(ln[1])
-            self.fst_vt['SubDyn']['CableT0'][i]        = float(ln[1])
+            self.fst_vt['SubDyn']['CableMatDens'][i]   = float(ln[2])
+            self.fst_vt['SubDyn']['CableT0'][i]        = float(ln[3])
+            self.fst_vt['SubDyn']['CtrlChannel'][i] = int(ln[4])
         # RIGID LINK PROPERTIES
         f.readline()
         self.fst_vt['SubDyn']['NRigidPropSets'] = int(f.readline().split()[0])
@@ -2006,7 +2011,7 @@ class InputReader_OpenFAST(object):
             self.fst_vt['SubDyn']['MCGZ'][i]      = float(ln[10])
         f.readline()
         # OUTPUT
-        self.fst_vt['SubDyn']['SumPrint'] = bool_read(f.readline().split()[0])
+        self.fst_vt['SubDyn']['SSSum'] = bool_read(f.readline().split()[0])
         self.fst_vt['SubDyn']['OutCOSM']  = bool_read(f.readline().split()[0])
         self.fst_vt['SubDyn']['OutAll']   = bool_read(f.readline().split()[0])
         self.fst_vt['SubDyn']['OutSwtch'] = int(f.readline().split()[0])

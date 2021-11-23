@@ -1706,7 +1706,7 @@ class InputWriter_OpenFAST(object):
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['SDdeltaT'], 'SDdeltaT', '- Local Integration Step. If "default", the glue-code integration step will be used.\n'))
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['IntMethod'], 'IntMethod', '- Integration Method [1/2/3/4 = RK4/AB4/ABM4/AM2].\n'))
         f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['SttcSolve'], 'SttcSolve', '- Solve dynamics about static equilibrium point\n'))
-        f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['GuyanLoadCorrection'], 'GuyanLoadCorrection', '- Include extra moment from lever arm at interface and rotate FEM for floating.\n'))
+        f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['ExtraMoment'], 'ExtraMoment', '- Include extra moment from lever arm at interface in interface reactions.\n'))
         f.write('-------------------- FEA and CRAIG-BAMPTON PARAMETERS---------------------------\n')
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['FEMMod'], 'FEMMod', '- FEM switch: element model in the FEM. [1= Euler-Bernoulli(E-B);  2=Tapered E-B (unavailable);  3= 2-node Timoshenko;  4= 2-node tapered Timoshenko (unavailable)]\n'))
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['NDiv'], 'NDiv', '- Number of sub-elements per member\n'))
@@ -1744,7 +1744,8 @@ class InputWriter_OpenFAST(object):
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['JointDirY'][i]))
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['JointDirZ'][i]))
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['JointStiff'][i]))
-            f.write(" ".join(ln) + '\n')        
+            ln.append('{:^11}'.format(self.fst_vt['SubDyn']['JointDamp'][i]))
+            f.write(" ".join(ln) + '\n')
         f.write('------------------- BASE REACTION JOINTS: 1/0 for Locked/Free DOF @ each Reaction Node ---------------------\n')
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['NReact'], 'NReact', '- Number of Joints with reaction forces; be sure to remove all rigid motion DOFs of the structure  (else det([K])=[0])\n'))
         f.write(" ".join(['{:^11s}'.format(i) for i in ['RJointID', 'RctTDXss', 'RctTDYss', 'RctTDZss', 'RctRDXss', 'RctRDYss', 'RctRDZss','SSIfile']])+' [Global Coordinate System]\n')
@@ -1758,7 +1759,7 @@ class InputWriter_OpenFAST(object):
             ln.append('{:^11d}'.format(self.fst_vt['SubDyn']['RctRDXss'][i]))
             ln.append('{:^11d}'.format(self.fst_vt['SubDyn']['RctRDYss'][i]))
             ln.append('{:^11d}'.format(self.fst_vt['SubDyn']['RctRDZss'][i]))
-            ln.append('{:^11}'.format(self.fst_vt['SubDyn']['Rct_SoilFile'][i]))
+            ln.append('{:^11}'.format(self.fst_vt['SubDyn']['SSIfile'][i]))
             f.write(" ".join(ln) + '\n')
         f.write('------- INTERFACE JOINTS: 1/0 for Locked (to the TP)/Free DOF @each Interface Joint (only Locked-to-TP implemented thus far (=rigid TP)) ---------\n')
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['NInterf'], 'NInterf', '- Number of interface joints locked to the Transition Piece (TP):  be sure to remove all rigid motion dofs\n'))
@@ -1821,14 +1822,15 @@ class InputWriter_OpenFAST(object):
             f.write(" ".join(ln) + '\n')
         f.write('-------------------------- CABLE PROPERTIES  -------------------------------------\n')
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['NCablePropSets'], 'NCablePropSets', '- Number of cable cable properties\n'))
-        f.write(" ".join(['{:^11s}'.format(i) for i in ['PropSetID', 'EA', 'MatDens', 'T0']])+'\n')
-        f.write(" ".join(['{:^11s}'.format(i) for i in ['(-)','(N)','(kg/m)','(N)']])+'\n')
+        f.write(" ".join(['{:^11s}'.format(i) for i in ['PropSetID', 'EA', 'MatDens', 'T0', 'CtrlChannel']])+'\n')
+        f.write(" ".join(['{:^11s}'.format(i) for i in ['(-)','(N)','(kg/m)','(N)', '(-)']])+'\n')
         for i in range(self.fst_vt['SubDyn']['NCablePropSets']):
             ln = []
             ln.append('{:^11d}'.format(self.fst_vt['SubDyn']['CablePropSetID'][i]))
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['CableEA'][i]))
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['CableMatDens'][i]))
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['CableT0'][i]))
+            ln.append('{:^11}'.format(self.fst_vt['SubDyn']['CtrlChannel'][i]))
             f.write(" ".join(ln) + '\n')
         f.write('----------------------- RIGID LINK PROPERTIES ------------------------------------\n')
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['NRigidPropSets'], 'NRigidPropSets', '- Number of rigid link properties\n'))
@@ -1875,7 +1877,7 @@ class InputWriter_OpenFAST(object):
             ln.append('{:^11}'.format(self.fst_vt['SubDyn']['MCGZ'][i]))
             f.write(" ".join(ln) + '\n')
         f.write('---------------------------- OUTPUT: SUMMARY & OUTFILE ------------------------------\n')
-        f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['SumPrint'], 'SumPrint', '- Output a Summary File (flag).It contains: matrices K,M  and C-B reduced M_BB, M-BM, K_BB, K_MM(OMG^2), PHI_R, PHI_L. It can also contain COSMs if requested.\n'))
+        f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['SSSum'], 'SSSum', '- Output a Summary File (flag).It contains: matrices K,M  and C-B reduced M_BB, M-BM, K_BB, K_MM(OMG^2), PHI_R, PHI_L. It can also contain COSMs if requested.\n'))
         f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['OutCOSM'], 'OutCOSM', '- Output cosine matrices with the selected output member forces (flag)\n'))
         f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['SubDyn']['OutAll'], 'OutAll', "- [T/F] Output all members' end forces\n"))
         f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['SubDyn']['OutSwtch'], 'OutSwtch', '- [1/2/3] Output requested channels to: 1=<rootname>.SD.out;  2=<rootname>.out (generated by FAST);  3=both files.\n'))
@@ -1997,7 +1999,7 @@ class InputWriter_OpenFAST(object):
         for i in range(self.fst_vt['MoorDyn']['RodTypes']['NRodTypes']):
             ln = []
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['RodTypes']['TypeName'][i]))
-            ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['RodTypes']['Diam'][i]))
+            ln.append('{:^11f}'.format(self.fst_vt['MoorDyn']['RodTypes']['Diam'][i]))
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['RodTypes']['Mass/m'][i]))
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['RodTypes']['Cd'][i]))
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['RodTypes']['Ca'][i]))
@@ -2005,7 +2007,7 @@ class InputWriter_OpenFAST(object):
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['RodTypes']['CaEnd'][i]))
             f.write(" ".join(ln) + '\n')
 
-        f.write('----------------------- BODIES ------------------------------------------\n')
+        f.write('---------------------- BODY LIST ---------------------- \n')
         # f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['MoorDyn']['Bodies']['NBodies'], 'NBodies', '- number of Bodies\n'))
         f.write(" ".join(
             ['{:^11s}'.format(i) for i in ['BodyID', 'X0', 'Y0', 'Z0', 'r0', 'p0', 'y0', 'Xcg', 'Ycg', 'Zcg', 'Mass', 'Volume', 'Ix,y,z', 'CdA-x,y,z', 'Ca-x,y,z']]) + '\n')
@@ -2029,7 +2031,7 @@ class InputWriter_OpenFAST(object):
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['Bodies']['Ca-x,y,z'][i]))
             f.write(" ".join(ln) + '\n')
 
-        f.write('----------------------- Rods ------------------------------------------\n')
+        f.write('---------------------- ROD PROPERTIES  ----------------------\n')
         # f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['MoorDyn']['Rods']['NRods'], 'NRods', '- number of Rods\n'))
         f.write(" ".join(
             ['{:^11s}'.format(i) for i in
@@ -2051,7 +2053,7 @@ class InputWriter_OpenFAST(object):
             ln.append('{:^11}'.format(self.fst_vt['MoorDyn']['Rods']['RodOutputs'][i]))
             f.write(" ".join(ln) + '\n')
 
-        f.write('---------------------- CONNECTION PROPERTIES --------------------------------\n')
+        f.write('---------------------- NODE PROPERTIES ---------------------- \n')
         # f.write('{:<22d} {:<11} {:}'.format(self.fst_vt['MoorDyn']['Nodes']['NConnects'], 'NConnects', '- number of connections including anchors and fairleads\n'))
         f.write(" ".join(['{:^11s}'.format(i) for i in ['PointID', 'Type', 'X', 'Y', 'Z', 'Mass', 'Volume', 'CdA', 'Ca']])+'\n')
         f.write(" ".join(['{:^11s}'.format(i) for i in ['(-)', '(-)', '(m)', '(m)', '(m)', '(kg)', '(m^3)', '(m^2)', '(-)']]) + '\n')
