@@ -421,6 +421,7 @@ class LinearTurbineModel(object):
             if isinstance(controller, LinearControlModel):
                 P_op = self.add_control(controller)
             else:
+                # todo what about non linearcontrolmodel
                 print('WARNING: controller not LinearControlModel() object')
 
         # linearize input (remove wind_speed_op)
