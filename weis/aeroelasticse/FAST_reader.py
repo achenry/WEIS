@@ -179,7 +179,7 @@ class InputReader_OpenFAST(object):
         self.fst_vt['Fst']['Twr_Kdmp']   = float_read(f.readline().split()[0])
         self.fst_vt['Fst']['Bld_Kdmp']   = float_read(f.readline().split()[0])
         self.fst_vt['Fst']['NLinTimes']  = int(f.readline().split()[0])
-        self.fst_vt['Fst']['LinTimes']   = [int(t) for t in f.readline().split('LinTimes')[0].split(',')]#[int(t) for t in re.findall(r'(\d+) (?=Lin)', ln)]
+        self.fst_vt['Fst']['LinTimes']   = [float(t) for t in f.readline().split('LinTimes')[0].split()]#[float(t) for t in re.findall(r'(\d+) (?=Lin)', ln)]
         self.fst_vt['Fst']['LinInputs']  = f.readline().split()[0]
         self.fst_vt['Fst']['LinOutputs'] = f.readline().split()[0]
         self.fst_vt['Fst']['LinOutJac']  = f.readline().split()[0]

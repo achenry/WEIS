@@ -74,14 +74,14 @@ class LinearFAST(runFAST_pywrapper_batch):
         # overwrite steady & linearizations
         self.overwrite          = True
 
+        super(LinearFAST, self).__init__()
+
         # Optional population of class attributes from key word arguments
         for (k, w) in kwargs.items():
             try:
                 setattr(self, k, w)
             except:
                 pass
-
-        super(LinearFAST, self).__init__()
 
 
     def gen_linear_cases(self,inputs={}):
@@ -99,11 +99,14 @@ class LinearFAST(runFAST_pywrapper_batch):
         case_inputs[("Fst","TStart")] = {'vals':[self.TStart], 'group':0}
         case_inputs[("Fst","TMax")] = {'vals':[self.TMax], 'group':0}
         case_inputs[("Fst","Linearize")] = {'vals':['True'], 'group':0}
-        case_inputs[("Fst","CalcSteady")] = {'vals':['True'], 'group':0}        # potential modelling input, but only Trim solution supported for now
-        case_inputs[("Fst","TrimGain")] = {'vals':[self.TrimGain], 'group':0}  
-        case_inputs[("Fst","TrimTol")] = {'vals':[self.TrimTol], 'group':0}  
-        case_inputs[("Fst","OutFmt")] = {'vals':['ES20.11E3'], 'group':0} 
-        case_inputs[("Fst","OutFileFmt")] = {'vals':[3], 'group':0} 
+        # TODO CalcSteady vs LinTimes?
+        case_inputs[("Fst","CalcSteady")] = {'vals':['False'], 'group':0}        # potential modelling input, but only Trim solution supported for now
+        case_inputs[("Fst","TrimCase")] = {'vals':[self.TrimCase], 'group':0}
+        case_inputs[("Fst","TrimGain")] = {'vals':[self.TrimGain], 'group':0}
+        case_inputs[("Fst","TrimTol")] = {'vals':[self.TrimTol], 'group':0}
+
+        case_inputs[("Fst","OutFmt")] = {'vals':['ES10.3E2'], 'group':0} # ES20.11E3
+        case_inputs[("Fst","OutFileFmt")] = {'vals':[1], 'group':0} # 3
 
         # HydroStates: if true, there will be a lot of hydronamic states, equal to num. states in ss_exct and ss_radiation models
         if any([d in ['PtfmSgDOF','PtfmSwDOF','PtfmHvDOF','PtfmRDOF','PtfmPDOF','PtfmyDOF'] for d in self.DOFs]):
@@ -147,9 +150,11 @@ class LinearFAST(runFAST_pywrapper_batch):
             k_opt = rosco_inputs['VS_RtTq'] / omega_rated_rpm ** 2
 
         case_inputs[("ServoDyn","VS_RtGnSp")] = {'vals':[omega_rated_rpm], 'group':0}  # convert to rpm and use 95% of rated
+        # case_inputs[("ServoDyn","VS_RtGnSp")] = {'vals':[480], 'group':0}  # convert to rpm and use 95% of rated
         case_inputs[("ServoDyn","VS_RtTq")] = {'vals':[rosco_inputs['VS_RtTq']], 'group':0}
         case_inputs[("ServoDyn","VS_Rgn2K")] = {'vals':[k_opt] , 'group':0}  # reduce so k\omega^2 < VS_RtTq
-        case_inputs[("ServoDyn","VS_SlPc")] = {'vals':[10.], 'group':0}
+        # case_inputs[("ServoDyn","VS_Rgn2K")] = {'vals':[0.8994] , 'group':0}  # reduce so k\omega^2 < VS_RtTq
+        case_inputs[("ServoDyn","VS_SlPc")] = {'vals':[0.0001], 'group':0}
 
         # set initial pitch to fine pitch
         if 'pitch_init' in inputs:
@@ -162,12 +167,13 @@ class LinearFAST(runFAST_pywrapper_batch):
             case_inputs[('ElastoDyn','BlPitch2')] = {'vals': pitch_init.tolist(), 'group': 1}
             case_inputs[('ElastoDyn','BlPitch3')] = {'vals': pitch_init.tolist(), 'group': 1}
         else:       # set initial pitch to 0 (may be problematic at high wind speeds)
-            case_inputs[('ElastoDyn','BlPitch1')] = {'vals': [0], 'group': 0}
-            case_inputs[('ElastoDyn','BlPitch2')] = {'vals': [0], 'group': 0}
-            case_inputs[('ElastoDyn','BlPitch3')] = {'vals': [0], 'group': 0}
+            case_inputs[('ElastoDyn','BlPitch1')] = {'vals': [9.034], 'group': 0}
+            case_inputs[('ElastoDyn','BlPitch2')] = {'vals': [9.034], 'group': 0}
+            case_inputs[('ElastoDyn','BlPitch3')] = {'vals': [9.034], 'group': 0}
 
-        # Set initial rotor speed to rated
-        case_inputs[("ElastoDyn","RotSpeed")] = {'vals':[rosco_inputs['PC_RefSpd'] * 30 / np.pi], 'group':0}  # convert to rpm and use 95% of rated
+        # Set initial rotor speed to rated 9.6
+        # case_inputs[("ElastoDyn","RotSpeed")] = {'vals':[rosco_inputs['PC_RefSpd'] * 30 / np.pi], 'group':0}  # convert to rpm and use 95% of rated
+        case_inputs[("ElastoDyn","RotSpeed")] = {'vals':[9.6], 'group':0}
 
         # Hydrodyn Inputs, these need to be state-space (2), but they should work if 0
         # Need to be this for linearization
@@ -223,24 +229,24 @@ class LinearFAST(runFAST_pywrapper_batch):
         self.channels = channels
 
         # Lin Times, KEEP THIS IN CASE WE USE THIS METHOD OF LINEARIZATION AT SOME POINT IN THE FUTURE
-        # rotPer = 60. / np.array(case_inputs['ElastoDyn','RotSpeed']['vals'])
-        # linTimes = np.linspace(self.TMax-100,self.TMax-100 + rotPer,num = self.NLinTimes, endpoint=False)
-        # linTimeStrings = []
+        rotPer = 60. / np.array(case_inputs['ElastoDyn','RotSpeed']['vals'])
+        linTimes = np.linspace(self.TStart, self.TStart + rotPer, num=self.NLinTimes, endpoint=False)
+        linTimeStrings = []
 
-        # if linTimes.ndim == 1:
-        #     linTimeStrings = np.array_str(linTimes,max_line_width=9000,precision=3)[1:-1]
-        # else:
-        #     for iCase in range(0,linTimes.shape[1]):
-        #         linTimeStrings.append(np.array_str(linTimes[:,iCase],max_line_width=9000,precision=3)[1:-1])
+        if linTimes.ndim == 1:
+            linTimeStrings = np.array_str(linTimes, max_line_width=9000, precision=3)[1:-1]
+        else:
+            for iCase in range(0,linTimes.shape[1]):
+                linTimeStrings.append(np.array_str(linTimes[:,iCase], max_line_width=9000, precision=3)[1:-1])
         
         case_inputs[("Fst","NLinTimes")] = {'vals':[self.NLinTimes], 'group':0}     # modelling option
+        case_inputs[("Fst","LinTimes")] = {'vals':[linTimes.squeeze()], 'group':0}
 
         # Trim case depends on rated wind speed (torque below-rated, pitch above)
-        TrimCase = 3 * np.ones(len(self.wind_speeds),dtype=int)
+        TrimCase = 3 * np.ones(len(self.wind_speeds), dtype=int)
         TrimCase[np.array(self.wind_speeds) < self.v_rated] = 2
 
         case_inputs[("Fst","TrimCase")] = {'vals':TrimCase.tolist(), 'group':1}
-
 
         # Generate Cases
         case_list, case_name_list = CaseGen_General(case_inputs, dir_matrix=self.FAST_runDirectory, namebase='lin')
@@ -248,10 +254,6 @@ class LinearFAST(runFAST_pywrapper_batch):
         self.case_name_list = case_name_list
 
         return case_list, case_name_list
-
-        
-        
-
 
     def gen_linear_model(self):
         """ 
@@ -265,6 +267,8 @@ class LinearFAST(runFAST_pywrapper_batch):
             self.overwrite_outfiles = False  
 
         if self.cores > 1:
+            # self.setup_multi(self.cores)
             self.run_multi(self.cores)
         else:
+            # self.setup_serial()
             self.run_serial()

@@ -338,26 +338,27 @@ class runFAST_pywrapper_batch(object):
 
         self.init_crunch()
 
-        case_data_all = self.create_case_data()
+        self.case_data_all = self.create_case_data()
 
-        for c in case_data_all:
+        for c in self.case_data_all:
             setup_serial(c)
     
     def run_serial(self):
         # Run batch serially
+        
         if not os.path.exists(self.FAST_runDirectory):
             os.makedirs(self.FAST_runDirectory)
 
         self.init_crunch()
 
-        case_data_all = self.create_case_data()
+        self.case_data_all = self.create_case_data()
 
         ss = {}
         et = {}
         dl = {}
         dam = {}
         ct = []
-        for c in case_data_all:
+        for c in self.case_data_all:
             _name, _ss, _et, _dl, _dam, _ct = evaluate(c)
             ss[_name] = _ss
             et[_name] = _et
@@ -375,19 +376,20 @@ class runFAST_pywrapper_batch(object):
 
         if not cores:
             cores = mp.cpu_count()
+            print(cores, "cores")
         pool = mp.Pool(cores)
 
         self.init_crunch()
 
-        case_data_all = self.create_case_data()
+        self.case_data_all = self.create_case_data()
 
-        output = pool.map(setup_serial, case_data_all)
+        output = pool.map(setup_multi, self.case_data_all)
         pool.close()
         pool.join()
 
     def run_multi(self, cores=None):
         # Run cases in parallel, threaded with multiprocessing module
-
+        
         if not os.path.exists(self.FAST_runDirectory):
             os.makedirs(self.FAST_runDirectory)
 
@@ -397,9 +399,9 @@ class runFAST_pywrapper_batch(object):
 
         self.init_crunch()
 
-        case_data_all = self.create_case_data()
-
-        output = pool.map(evaluate_multi, case_data_all)
+        self.case_data_all = self.create_case_data()
+        
+        output = pool.map(evaluate_multi, self.case_data_all)
         pool.close()
         pool.join()
 
@@ -515,8 +517,9 @@ def evaluate(indict):
             setattr(fast, k, indict[k])
         else:
             print(f'WARNING: Unknown OpenFAST executation parameter, {k}')
-    if fast.fst_vt == {}:
-        fast.setup()
+    # if fast.fst_vt == {}:
+    #
+    fast.setup()
     return fast.execute()
 
 

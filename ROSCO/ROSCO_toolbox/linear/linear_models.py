@@ -24,7 +24,8 @@ except ImportError:
 
 class LinearTurbineModel(object):
 
-    def __init__(self, lin_file_dir, lin_file_names, nlin=12, reduceStates=False, fromMat=False, lin_file=None, rm_hydro=False, load_parallel=False):
+    def __init__(self, lin_file_dir, lin_file_names, nlin=12, reduceStates=False, fromMat=False, lin_file=None,
+                 rm_hydro=False, load_parallel=False):
         '''
             inputs:    
                 lin_file_dir (string) - directory of linear file outputs from OpenFAST
@@ -42,9 +43,9 @@ class LinearTurbineModel(object):
             n_lin_cases = len(lin_file_names)
 
             u_ops = np.array([], [])
-            all_MBC = []
-            all_matData = []
-            all_FAST_linData = []
+            self.all_MBC = []
+            self.all_matData = []
+            self.all_FAST_linData = []
 
             if load_parallel:
                 import time
@@ -58,7 +59,7 @@ class LinearTurbineModel(object):
                         lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin+1))) for i_lin in range(0, nlin)] for iCase in range(0,n_lin_cases)]
                 cores = mp.cpu_count()
                 pool = mp.Pool(cores)
-                all_MBC, all_matData, all_FAST_linData = zip(*pool.map(run_mbc3, all_linfiles))
+                self.all_MBC, self.all_matData, self.all_FAST_linData = zip(*pool.map(run_mbc3, all_linfiles))
                 pool.close()
                 pool.join()
                 print('loaded in parallel in {} seconds'.format(time.time()-t1))
@@ -75,18 +76,18 @@ class LinearTurbineModel(object):
                             range(0, nlin)]
 
                     MBC, matData, FAST_linData = run_mbc3(lin_files_i)
-                    all_MBC.append(MBC)
-                    all_matData.append(matData)
-                    all_FAST_linData.append(FAST_linData)
+                    self.all_MBC.append(MBC)
+                    self.all_matData.append(matData)
+                    self.all_FAST_linData.append(FAST_linData)
                 print('loaded in serial in {} seconds'.format(time.time()-t1))
 
 
             for iCase in range(0, n_lin_cases):
                 # nlin array of linearization outputs for iCase
 
-                MBC = all_MBC[iCase]
-                matData = all_matData[iCase]
-                FAST_linData = all_FAST_linData[iCase]
+                MBC = self.all_MBC[iCase]
+                matData = self.all_matData[iCase]
+                FAST_linData = self.all_FAST_linData[iCase]
 
                 if not iCase:   # first time through
                     # Initialize operating points, matrices
@@ -271,6 +272,7 @@ class LinearTurbineModel(object):
             self.ind_fast_outs = matDict['indOuts'][0] - 1
             # self.ind_fast_outs       = matDict['indOuts'][0][0] - 1
 
+
     # Save function
     def save(self, filename):
         '''
@@ -390,6 +392,10 @@ class LinearTurbineModel(object):
         P_cl = connect_ml([self.P_op, lin_control_model.C_all], self.DescCntrlInpt, self.DescOutput)
 
         return P_cl
+
+    def getOutList(self):
+        OutList = [out_name.split()[1][:-1] for out_name in self.DescOutput]
+        return OutList
 
     def solve(self, disturbance, Plot=False, open_loop=True, controller={}, reduce_states=False):
         ''' 

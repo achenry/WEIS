@@ -241,7 +241,7 @@ class InputWriter_OpenFAST(object):
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['Fst']['Twr_Kdmp'],      'Twr_Kdmp',     '- Damping factor for the tower [used only if CalcSteady=True] (N/(m/s))\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['Fst']['Bld_Kdmp'],      'Bld_Kdmp',     '- Damping factor for the blades [used only if CalcSteady=True] (N/(m/s))\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['Fst']['NLinTimes'],     'NLinTimes',    '- Number of times to linearize (-) [>=1] [unused if Linearize=False]\n'))
-        f.write('{:<22} {:<11} {:}'.format(', '.join(['%f'%i for i in np.array(self.fst_vt['Fst']['LinTimes'], dtype=float)]), 'LinTimes', '- List of times at which to linearize (s) [1 to NLinTimes] [used only when Linearize=True and CalcSteady=False]\n'))
+        f.write('{:<22} {:<11} {:}'.format(', '.join(['%.2f'%i for i in np.array(self.fst_vt['Fst']['LinTimes'], dtype=float)]), 'LinTimes', '- List of times at which to linearize (s) [1 to NLinTimes] [used only when Linearize=True and CalcSteady=False]\n')) # TODO should be float?
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['Fst']['LinInputs'],     'LinInputs',    '- Inputs included in linearization (switch) {0=none; 1=standard; 2=all module inputs (debug)} [unused if Linearize=False]\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['Fst']['LinOutputs'],    'LinOutputs',   '- Outputs included in linearization (switch) {0=none; 1=from OutList(s); 2=all module outputs (debug)} [unused if Linearize=False]\n'))
         f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['Fst']['LinOutJac'],   'LinOutJac',    '- Include full Jacobians in linearization output (for debug) (flag) [unused if Linearize=False; used only if LinInputs=LinOutputs=2]\n'))
@@ -621,7 +621,7 @@ class InputWriter_OpenFAST(object):
 
         f.write('------- InflowWind v3.01.* INPUT FILE -------------------------------------------------------------------------\n')
         f.write('Generated with AeroElasticSE FAST driver\n')
-        f.write('---------------------------------------------------------------------------------------------------------------\n')
+        f.write('--- SIMULATION CONTROL ---\n')
         f.write('{!s:<22} {:<11} {:}'.format(self.fst_vt['InflowWind']['Echo'], 'Echo', '- Echo input data to <RootName>.ech (flag)\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['InflowWind']['WindType'], 'WindType', '- switch for wind file type (1=steady; 2=uniform; 3=binary TurbSim FF; 4=binary Bladed-style FF; 5=HAWC format; 6=User defined; 7=native Bladed FF)\n'))
         f.write('{:<22} {:<11} {:}'.format(self.fst_vt['InflowWind']['PropagationDir'], 'PropagationDir', '- Direction of wind propagation (meteoroligical rotation from aligned with X (positive rotates towards -Y) -- degrees)\n'))
