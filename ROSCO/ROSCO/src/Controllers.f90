@@ -216,7 +216,7 @@ CONTAINS
         LocalVar%GenTq = ratelimit(LocalVar%GenTq, LocalVar%VS_LastGenTrq, -CntrPar%VS_MaxRat, CntrPar%VS_MaxRat, LocalVar%DT)    ! Saturate the command using the torque rate limit
         
 	! Open loop torque control
-        IF ((CntrPar%OL_Mode == 1) .AND. (CntrPar%Ind_GenTq > 0)) THEN
+        IF ((CntrPar%OL_Mode == 1) .AND. (CntrPar%Ind_GenTq > 0)) .AND. (LocalVar%Time >= CntrPar%OL_Breakpoints(1))) THEN
             LocalVar%GenTq = interp1d(CntrPar%OL_Breakpoints,CntrPar%OL_GenTq,LocalVar%Time, ErrVar)
         ENDIF
 

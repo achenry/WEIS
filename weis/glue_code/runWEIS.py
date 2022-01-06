@@ -56,6 +56,15 @@ def run_weis(fname_wt_input, fname_modeling_options, fname_opt_options, overridd
             n_DV = max([n_DV, 1])
             max_parallel_OF_runs = max([int(np.floor((max_cores - n_DV) / n_DV)), 1])
             n_OF_runs_parallel = min([int(n_OF_runs), max_parallel_OF_runs])
+        elif modeling_options['Level2']['flag']:
+            if max_cores > 2. * n_DV:
+                n_FD = n_DV
+            else:
+                n_FD = int(np.floor(max_cores / 2))
+            n_OF_runs = modeling_options['Level2']['linearization']['NLinTimes']
+            n_DV = max([n_DV, 1])
+            max_parallel_OF_runs = max([int(np.floor((max_cores - n_DV) / n_DV)), 1])
+            n_OF_runs_parallel = min([int(n_OF_runs), max_parallel_OF_runs])
         else:
             # If OpenFAST is not called, the number of parallel calls to compute the FDs is just equal to the minimum
             # of cores available and DV
@@ -89,7 +98,7 @@ def run_weis(fname_wt_input, fname_modeling_options, fname_opt_options, overridd
     if color_i == 0:  # the top layer of cores enters, the others sit and wait to run openfast simulations
         # if MPI and opt_options['driver']['optimization']['flag']:
         if MPI:
-            if modeling_options['Level3']['flag']:
+            if modeling_options['Level3']['flag'] or modeling_options['Level2']['flag']:
                 # Parallel settings for OpenFAST
                 modeling_options['General']['openfast_configuration']['mpi_run'] = True
                 modeling_options['General']['openfast_configuration']['mpi_comm_map_down'] = comm_map_down
@@ -190,7 +199,10 @@ def run_weis(fname_wt_input, fname_modeling_options, fname_opt_options, overridd
             # Save data to numpy and matlab arrays
             fileIO.save_data(froot_out, wt_opt)
 
-    if MPI and modeling_options['Level3']['flag'] and not opt_options['driver']['design_of_experiments']['flag']:
+    if MPI and \
+            (modeling_options['Level3']['flag'] or modeling_options['Level2']['flag']) and \
+            (not opt_options['driver']['design_of_experiments']['flag']) and \
+            color_i in color_map:
         # subprocessor ranks spin, waiting for FAST simulations to run
         sys.stdout.flush()
         if rank in comm_map_up.keys():
@@ -200,7 +212,11 @@ def run_weis(fname_wt_input, fname_modeling_options, fname_opt_options, overridd
         # close signal to subprocessors
         subprocessor_stop(comm_map_down)
         sys.stdout.flush()
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> WISDEM-develop
     if rank == 0:
         return wt_opt, modeling_options, opt_options
     else:

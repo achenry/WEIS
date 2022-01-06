@@ -14,6 +14,7 @@ import multiprocessing as mp
 from itertools import chain
 from scipy.io import loadmat
 import pickle
+import glob
 
 try:
     import pyFAST.linearization.mbc.mbc3 as mbc
@@ -50,13 +51,14 @@ class LinearTurbineModel(object):
             if load_parallel:
                 import time
                 t1 = time.time()
-                if type(lin_file_dir) is list:
+                if type(lin_file_dir) is list and len(lin_file_dir):
                     all_linfiles = [[os.path.realpath(os.path.join(
                         lin_file_dir[iCase], lin_file_names[iCase] + '.{}.lin'.format(i_lin + 1))) for i_lin in range(0, nlin)]
                         for iCase in range(0, n_lin_cases)]
                 else:
                     all_linfiles = [[os.path.realpath(os.path.join(
-                        lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin+1))) for i_lin in range(0, nlin)] for iCase in range(0,n_lin_cases)]
+                        lin_file_dir, lin_file_names[iCase] + '.{}.lin'.format(i_lin + 1))) for i_lin in range(0, nlin)] for iCase in range(0,n_lin_cases)]
+
                 cores = mp.cpu_count()
                 pool = mp.Pool(cores)
                 self.all_MBC, self.all_matData, self.all_FAST_linData = zip(*pool.map(run_mbc3, all_linfiles))
@@ -175,6 +177,14 @@ class LinearTurbineModel(object):
             deg_idx = np.flatnonzero(np.core.defchararray.find(matData['DescOutput'], 'deg') > -1).tolist()
             self.C_ops[deg_idx, :, :] = deg2rad(self.C_ops[deg_idx, :, :])
             matData['DescOutput'] = [desc.replace('deg', 'rad') for desc in matData['DescOutput']]
+            # Convert kN to N
+            kN_idx = np.flatnonzero(np.core.defchararray.find(matData['DescOutput'], 'kN') > -1).tolist()
+            self.C_ops[kN_idx, :, :] = self.C_ops[kN_idx, :, :] * 1000
+            matData['DescOutput'] = [desc.replace('kN', 'N') for desc in matData['DescOutput']]
+            # Convert kW to W
+            kW_idx = np.flatnonzero(np.core.defchararray.find(matData['DescOutput'], 'kW') > -1).tolist()
+            self.C_ops[kW_idx, :, :] = self.C_ops[kW_idx, :, :] * 1000
+            matData['DescOutput'] = [desc.replace('kW', 'W') for desc in matData['DescOutput']]
 
 
             # Save wind speed as own array since that's what we'll schedule over to start
