@@ -244,10 +244,8 @@ class LinearFAST(runFAST_pywrapper_batch):
         case_inputs[("Fst","LinTimes")] = {'vals':[linTimes.squeeze()], 'group':0}
 
         # Trim case depends on rated wind speed (torque below-rated, pitch above)
-<<<<<<< HEAD
         TrimCase = 3 * np.ones(len(self.wind_speeds), dtype=int)
-=======
-<<<<<<< HEAD
+
         if 'Vrated' in inputs:
             # The rated wind speed in weis is determined by cc-blade and doesn't account for 
             # deflections like platform pitch angle, etc., so we offset the rated wind speed 
@@ -260,11 +258,6 @@ class LinearFAST(runFAST_pywrapper_batch):
             # are enabled the greater the rated offset should be
             self.v_rated = inputs['Vrated'] + self.rated_offset
 
-        TrimCase = 3 * np.ones(len(self.wind_speeds),dtype=int)
-=======
-        TrimCase = 3 * np.ones(len(self.wind_speeds), dtype=int)
->>>>>>> 45730bb7 (updates)
->>>>>>> WISDEM-develop
         TrimCase[np.array(self.wind_speeds) < self.v_rated] = 2
 
         case_inputs[("Fst","TrimCase")] = {'vals':TrimCase.tolist(), 'group':1}

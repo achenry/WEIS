@@ -143,6 +143,19 @@ class InputReader_OpenFAST(object):
         self.fst_vt['Fst']['CompSub'] = int(f.readline().split()[0])
         self.fst_vt['Fst']['CompMooring'] = int(f.readline().split()[0])
         self.fst_vt['Fst']['CompIce'] = int(f.readline().split()[0])
+        self.fst_vt['Fst']['MHK'] = int(f.readline().split()[0])
+
+        # Environmental Conditions
+        f.readline()
+        self.fst_vt['Fst']['Gravity'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['AirDens'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['WtrDens'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['KinVisc'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['SpdSound'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['Patm'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['Pvap'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['WtrDpth'] = float_read(f.readline().split()[0])
+        self.fst_vt['Fst']['MSL2SWL'] = float_read(f.readline().split()[0])
 
         # Input Files (input_files)
         f.readline()
@@ -223,8 +236,8 @@ class InputReader_OpenFAST(object):
         self.fst_vt['ElastoDyn']['DT'] = float_read(f.readline().split()[0])
 
         # Environmental Condition (envir_cond)
-        f.readline()
-        self.fst_vt['ElastoDyn']['Gravity'] = float_read(f.readline().split()[0])
+        # f.readline()
+        # self.fst_vt['ElastoDyn']['Gravity'] = float_read(f.readline().split()[0])
 
         # Degrees of Freedom (dof)
         f.readline()
@@ -738,7 +751,7 @@ class InputReader_OpenFAST(object):
         self.fst_vt['AeroDyn15']['SpdSound']       = float_read(f.readline().split()[0])
         self.fst_vt['AeroDyn15']['Patm']           = float_read(f.readline().split()[0])
         self.fst_vt['AeroDyn15']['Pvap']           = float_read(f.readline().split()[0])
-        self.fst_vt['AeroDyn15']['FluidDepth']     = float_read(f.readline().split()[0])
+        # self.fst_vt['AeroDyn15']['FluidDepth']     = float_read(f.readline().split()[0])
 
         # Blade-Element/Momentum Theory Options
         f.readline()
@@ -766,6 +779,8 @@ class InputReader_OpenFAST(object):
         f.readline()
         self.fst_vt['AeroDyn15']['UAMod']                  = int(f.readline().split()[0])
         self.fst_vt['AeroDyn15']['FLookup']                = bool_read(f.readline().split()[0])
+        self.fst_vt['AeroDyn15']['UAStartRad']             = float_read(f.readline().split()[0])
+        self.fst_vt['AeroDyn15']['UAEndRad']               = float_read(f.readline().split()[0])
 
         # Airfoil Information
         f.readline()
@@ -2122,7 +2137,6 @@ class InputReader_OpenFAST(object):
         self.fst_vt['MoorDyn']['LineTypes']['CdAx']      = []
         self.fst_vt['MoorDyn']['LineTypes']['CaAx']      = []
         for i in range(self.fst_vt['MoorDyn']['LineTypes']['NLineTypes']):
-<<<<<<< HEAD
             data_line = f.readline().strip().split()
             self.fst_vt['MoorDyn']['LineTypes']['Name'].append(str(data_line[0]))
             self.fst_vt['MoorDyn']['LineTypes']['Diam'].append(float(data_line[1]))
@@ -2158,44 +2172,42 @@ class InputReader_OpenFAST(object):
             self.fst_vt['MoorDyn']['RodTypes']['CdEnd'].append(float(data_line[5]))
             self.fst_vt['MoorDyn']['RodTypes']['CaEnd'].append(float(data_line[6]))
 
-        # Body List
+        # Body List TODO
         self.fst_vt['MoorDyn']['Bodies'] = {}
         f.readline()
         self.fst_vt['MoorDyn']['Bodies']['NBodies'] = 3 # int(f.readline().split()[0])
         f.readline()
         f.readline()
         self.fst_vt['MoorDyn']['Bodies']['BodyID'] = []
+        self.fst_vt['MoorDyn']['Bodies']['Attachment'] = []
         self.fst_vt['MoorDyn']['Bodies']['X0'] = []
         self.fst_vt['MoorDyn']['Bodies']['Y0'] = []
         self.fst_vt['MoorDyn']['Bodies']['Z0'] = []
         self.fst_vt['MoorDyn']['Bodies']['r0'] = []
         self.fst_vt['MoorDyn']['Bodies']['p0'] = []
         self.fst_vt['MoorDyn']['Bodies']['y0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Xcg'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Ycg'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Zcg'] = []
         self.fst_vt['MoorDyn']['Bodies']['Mass'] = []
+        self.fst_vt['MoorDyn']['Bodies']['CG*'] = []
+        self.fst_vt['MoorDyn']['Bodies']['I*'] = []
         self.fst_vt['MoorDyn']['Bodies']['Volume'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Ix,y,z'] = []
-        self.fst_vt['MoorDyn']['Bodies']['CdA-x,y,z'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Ca-x,y,z'] = []
+        self.fst_vt['MoorDyn']['Bodies']['CdA*'] = []
+        self.fst_vt['MoorDyn']['Bodies']['Ca'] = []
         for i in range(self.fst_vt['MoorDyn']['Bodies']['NBodies']):
             data_line = f.readline().strip().split()
             self.fst_vt['MoorDyn']['Bodies']['BodyID'].append(str(data_line[0]))
-            self.fst_vt['MoorDyn']['Bodies']['X0'].append(float(data_line[1]))
-            self.fst_vt['MoorDyn']['Bodies']['Y0'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['Bodies']['Z0'].append(float(data_line[3]))
-            self.fst_vt['MoorDyn']['Bodies']['r0'].append(float(data_line[4]))
-            self.fst_vt['MoorDyn']['Bodies']['p0'].append(float(data_line[5]))
-            self.fst_vt['MoorDyn']['Bodies']['y0'].append(float(data_line[6]))
-            self.fst_vt['MoorDyn']['Bodies']['Xcg'].append(float(data_line[7]))
-            self.fst_vt['MoorDyn']['Bodies']['Ycg'].append(float(data_line[8]))
-            self.fst_vt['MoorDyn']['Bodies']['Zcg'].append(float(data_line[9]))
-            self.fst_vt['MoorDyn']['Bodies']['Mass'].append(float(data_line[10]))
+            self.fst_vt['MoorDyn']['Bodies']['Attachment'].append(str(data_line[1]))
+            self.fst_vt['MoorDyn']['Bodies']['X0'].append(float(data_line[2]))
+            self.fst_vt['MoorDyn']['Bodies']['Y0'].append(float(data_line[3]))
+            self.fst_vt['MoorDyn']['Bodies']['Z0'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['Bodies']['r0'].append(float(data_line[5]))
+            self.fst_vt['MoorDyn']['Bodies']['p0'].append(float(data_line[6]))
+            self.fst_vt['MoorDyn']['Bodies']['y0'].append(float(data_line[7]))
+            self.fst_vt['MoorDyn']['Bodies']['Mass'].append(float(data_line[8]))
+            self.fst_vt['MoorDyn']['Bodies']['CG*'].append(float(data_line[9]))
+            self.fst_vt['MoorDyn']['Bodies']['I*'].append(float(data_line[10]))
             self.fst_vt['MoorDyn']['Bodies']['Volume'].append(float(data_line[11]))
-            self.fst_vt['MoorDyn']['Bodies']['Ix,y,z'].append(float(data_line[12]))
-            self.fst_vt['MoorDyn']['Bodies']['CdA-x,y,z'].append(float(data_line[13]))
-            self.fst_vt['MoorDyn']['Bodies']['Ca-x,y,z'].append(float(data_line[14]))
+            self.fst_vt['MoorDyn']['Bodies']['CdA*'].append(float(data_line[12]))
+            self.fst_vt['MoorDyn']['Bodies']['Ca'].append(float(data_line[13]))
 
         # Rod Properties
         self.fst_vt['MoorDyn']['Rods'] = {}
@@ -2204,8 +2216,8 @@ class InputReader_OpenFAST(object):
         f.readline()
         f.readline()
         self.fst_vt['MoorDyn']['Rods']['RodID'] = []
-        self.fst_vt['MoorDyn']['Rods']['Type/BodyID'] = []
         self.fst_vt['MoorDyn']['Rods']['RodType'] = []
+        self.fst_vt['MoorDyn']['Rods']['Attachment'] = []
         self.fst_vt['MoorDyn']['Rods']['Xa'] = []
         self.fst_vt['MoorDyn']['Rods']['Ya'] = []
         self.fst_vt['MoorDyn']['Rods']['Za'] = []
@@ -2216,104 +2228,9 @@ class InputReader_OpenFAST(object):
         self.fst_vt['MoorDyn']['Rods']['RodOutputs'] = []
         for i in range(self.fst_vt['MoorDyn']['Rods']['NRods']):
             data_line = f.readline().strip().split()
-=======
-            data_line = f.readline().strip().split()
-            self.fst_vt['MoorDyn']['LineTypes']['Name'].append(str(data_line[0]))
-            self.fst_vt['MoorDyn']['LineTypes']['Diam'].append(float(data_line[1]))
-            self.fst_vt['MoorDyn']['LineTypes']['MassDen'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['LineTypes']['EA'].append(float(data_line[3]))
-            self.fst_vt['MoorDyn']['LineTypes']['BA_zeta'].append(float(data_line[4]))
-            self.fst_vt['MoorDyn']['LineTypes']['EI'].append(float(data_line[5]))
-            self.fst_vt['MoorDyn']['LineTypes']['Cd'].append(float(data_line[6]))
-            self.fst_vt['MoorDyn']['LineTypes']['Ca'].append(float(data_line[7]))
-            self.fst_vt['MoorDyn']['LineTypes']['CdAx'].append(float(data_line[8]))
-            self.fst_vt['MoorDyn']['LineTypes']['CaAx'].append(float(data_line[9]))
-
-        # Rod Types
-        self.fst_vt['MoorDyn']['RodTypes'] = {}
-        f.readline()
-        self.fst_vt['MoorDyn']['RodTypes']['NRodTypes'] = 2 # int(f.readline().split()[0])
-        f.readline()
-        f.readline()
-        self.fst_vt['MoorDyn']['RodTypes']['TypeName'] = []
-        self.fst_vt['MoorDyn']['RodTypes']['Diam'] = []
-        self.fst_vt['MoorDyn']['RodTypes']['Mass/m'] = []
-        self.fst_vt['MoorDyn']['RodTypes']['Cd'] = []
-        self.fst_vt['MoorDyn']['RodTypes']['Ca'] = []
-        self.fst_vt['MoorDyn']['RodTypes']['CdEnd'] = []
-        self.fst_vt['MoorDyn']['RodTypes']['CaEnd'] = []
-        for i in range(self.fst_vt['MoorDyn']['RodTypes']['NRodTypes']):
-            data_line = f.readline().strip().split()
-            self.fst_vt['MoorDyn']['RodTypes']['TypeName'].append(str(data_line[0]))
-            self.fst_vt['MoorDyn']['RodTypes']['Diam'].append(float(data_line[1]))
-            self.fst_vt['MoorDyn']['RodTypes']['Mass/m'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['RodTypes']['Cd'].append(float(data_line[3]))
-            self.fst_vt['MoorDyn']['RodTypes']['Ca'].append(float(data_line[4]))
-            self.fst_vt['MoorDyn']['RodTypes']['CdEnd'].append(float(data_line[5]))
-            self.fst_vt['MoorDyn']['RodTypes']['CaEnd'].append(float(data_line[6]))
-
-        # Body List
-        self.fst_vt['MoorDyn']['Bodies'] = {}
-        f.readline()
-        self.fst_vt['MoorDyn']['Bodies']['NBodies'] = 3 # int(f.readline().split()[0])
-        f.readline()
-        f.readline()
-        self.fst_vt['MoorDyn']['Bodies']['BodyID'] = []
-        self.fst_vt['MoorDyn']['Bodies']['X0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Y0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Z0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['r0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['p0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['y0'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Xcg'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Ycg'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Zcg'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Mass'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Volume'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Ix,y,z'] = []
-        self.fst_vt['MoorDyn']['Bodies']['CdA-x,y,z'] = []
-        self.fst_vt['MoorDyn']['Bodies']['Ca-x,y,z'] = []
-        for i in range(self.fst_vt['MoorDyn']['Bodies']['NBodies']):
-            data_line = f.readline().strip().split()
-            self.fst_vt['MoorDyn']['Bodies']['BodyID'].append(str(data_line[0]))
-            self.fst_vt['MoorDyn']['Bodies']['X0'].append(float(data_line[1]))
-            self.fst_vt['MoorDyn']['Bodies']['Y0'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['Bodies']['Z0'].append(float(data_line[3]))
-            self.fst_vt['MoorDyn']['Bodies']['r0'].append(float(data_line[4]))
-            self.fst_vt['MoorDyn']['Bodies']['p0'].append(float(data_line[5]))
-            self.fst_vt['MoorDyn']['Bodies']['y0'].append(float(data_line[6]))
-            self.fst_vt['MoorDyn']['Bodies']['Xcg'].append(float(data_line[7]))
-            self.fst_vt['MoorDyn']['Bodies']['Ycg'].append(float(data_line[8]))
-            self.fst_vt['MoorDyn']['Bodies']['Zcg'].append(float(data_line[9]))
-            self.fst_vt['MoorDyn']['Bodies']['Mass'].append(float(data_line[10]))
-            self.fst_vt['MoorDyn']['Bodies']['Volume'].append(float(data_line[11]))
-            self.fst_vt['MoorDyn']['Bodies']['Ix,y,z'].append(float(data_line[12]))
-            self.fst_vt['MoorDyn']['Bodies']['CdA-x,y,z'].append(float(data_line[13]))
-            self.fst_vt['MoorDyn']['Bodies']['Ca-x,y,z'].append(float(data_line[14]))
-
-        # Rod Properties
-        self.fst_vt['MoorDyn']['Rods'] = {}
-        f.readline()
-        self.fst_vt['MoorDyn']['Rods']['NRods'] = 42 # int(f.readline().split()[0])
-        f.readline()
-        f.readline()
-        self.fst_vt['MoorDyn']['Rods']['RodID'] = []
-        self.fst_vt['MoorDyn']['Rods']['Type/BodyID'] = []
-        self.fst_vt['MoorDyn']['Rods']['RodType'] = []
-        self.fst_vt['MoorDyn']['Rods']['Xa'] = []
-        self.fst_vt['MoorDyn']['Rods']['Ya'] = []
-        self.fst_vt['MoorDyn']['Rods']['Za'] = []
-        self.fst_vt['MoorDyn']['Rods']['Xb'] = []
-        self.fst_vt['MoorDyn']['Rods']['Yb'] = []
-        self.fst_vt['MoorDyn']['Rods']['Zb'] = []
-        self.fst_vt['MoorDyn']['Rods']['NumSegs'] = []
-        self.fst_vt['MoorDyn']['Rods']['RodOutputs'] = []
-        for i in range(self.fst_vt['MoorDyn']['Rods']['NRods']):
-            data_line = f.readline().strip().split()
->>>>>>> WISDEM-develop
             self.fst_vt['MoorDyn']['Rods']['RodID'].append(str(data_line[0]))
-            self.fst_vt['MoorDyn']['Rods']['Type/BodyID'].append(str(data_line[1]))
-            self.fst_vt['MoorDyn']['Rods']['RodType'].append(str(data_line[2]))
+            self.fst_vt['MoorDyn']['Rods']['RodType'].append(str(data_line[1]))
+            self.fst_vt['MoorDyn']['Rods']['Attachment'].append(str(data_line[2]))
             self.fst_vt['MoorDyn']['Rods']['Xa'].append(float(data_line[3]))
             self.fst_vt['MoorDyn']['Rods']['Ya'].append(float(data_line[4]))
             self.fst_vt['MoorDyn']['Rods']['Za'].append(float(data_line[5]))
@@ -2330,7 +2247,7 @@ class InputReader_OpenFAST(object):
         f.readline()
         f.readline()
         self.fst_vt['MoorDyn']['Nodes']['PointID'] = []
-        self.fst_vt['MoorDyn']['Nodes']['Type'] = []
+        self.fst_vt['MoorDyn']['Nodes']['Attachment'] = []
         self.fst_vt['MoorDyn']['Nodes']['X']    = []
         self.fst_vt['MoorDyn']['Nodes']['Y']    = []
         self.fst_vt['MoorDyn']['Nodes']['Z']    = []
@@ -2341,7 +2258,7 @@ class InputReader_OpenFAST(object):
         for i in range(self.fst_vt['MoorDyn']['Nodes']['NConnects']):
             data_line = f.readline().strip().split()
             self.fst_vt['MoorDyn']['Nodes']['PointID'].append(int(data_line[0]))
-            self.fst_vt['MoorDyn']['Nodes']['Type'].append(str(data_line[1]))
+            self.fst_vt['MoorDyn']['Nodes']['Attachment'].append(str(data_line[1]))
             self.fst_vt['MoorDyn']['Nodes']['X'].append(float(data_line[2]))
             self.fst_vt['MoorDyn']['Nodes']['Y'].append(float(data_line[3]))
             self.fst_vt['MoorDyn']['Nodes']['Z'].append(float(data_line[4]))
@@ -2358,25 +2275,20 @@ class InputReader_OpenFAST(object):
         f.readline()
         self.fst_vt['MoorDyn']['Lines']['LineID']          = []
         self.fst_vt['MoorDyn']['Lines']['LineType']      = []
-        self.fst_vt['MoorDyn']['Lines']['UnstrLen']      = []
-        self.fst_vt['MoorDyn']['Lines']['NumSegs']       = []
         self.fst_vt['MoorDyn']['Lines']['AttachA']      = []
         self.fst_vt['MoorDyn']['Lines']['AttachB']      = []
+        self.fst_vt['MoorDyn']['Lines']['UnstrLen']      = []
+        self.fst_vt['MoorDyn']['Lines']['NumSegs']      = []
         self.fst_vt['MoorDyn']['Lines']['LineOutputs']       = []
-        self.fst_vt['MoorDyn']['Lines']['CtrlChan']       = []
         for i in range(self.fst_vt['MoorDyn']['Lines']['NLines']):
             data_line = f.readline().strip().split()
             self.fst_vt['MoorDyn']['Lines']['LineID'].append(int(data_line[0]))
             self.fst_vt['MoorDyn']['Lines']['LineType'].append(str(data_line[1]))
-            self.fst_vt['MoorDyn']['Lines']['UnstrLen'].append(float(data_line[2]))
-            self.fst_vt['MoorDyn']['Lines']['NumSegs'].append(int(data_line[3]))
-            self.fst_vt['MoorDyn']['Lines']['AttachA'].append(int(data_line[4]))
-            self.fst_vt['MoorDyn']['Lines']['AttachB'].append(int(data_line[5]))
+            self.fst_vt['MoorDyn']['Lines']['AttachA'].append(int(data_line[2]))
+            self.fst_vt['MoorDyn']['Lines']['AttachB'].append(int(data_line[3]))
+            self.fst_vt['MoorDyn']['Lines']['UnstrLen'].append(float(data_line[4]))
+            self.fst_vt['MoorDyn']['Lines']['NumSegs'].append(int(data_line[5]))
             self.fst_vt['MoorDyn']['Lines']['LineOutputs'].append(str(data_line[6]))
-            if len(data_line) > 7:
-                self.fst_vt['MoorDyn']['Lines']['CtrlChan'].append(int(data_line[7]))
-            else:
-                self.fst_vt['MoorDyn']['Lines']['CtrlChan'].append(0)
 
         # Controls
         f.readline()
@@ -2393,7 +2305,7 @@ class InputReader_OpenFAST(object):
         self.fst_vt['MoorDyn']['Solver']['TmaxIC']    = float_read(f.readline().split()[0])
         self.fst_vt['MoorDyn']['Solver']['CdScaleIC'] = float_read(f.readline().split()[0])
         self.fst_vt['MoorDyn']['Solver']['threshIC']  = float_read(f.readline().split()[0])
-        self.fst_vt['MoorDyn']['Solver']['WaterKin']  = int(f.readline().split()[0])
+        self.fst_vt['MoorDyn']['Solver']['WaterKin']  = f.readline().split()[0][1:-1]
         f.readline()
 
         data = f.readline()
