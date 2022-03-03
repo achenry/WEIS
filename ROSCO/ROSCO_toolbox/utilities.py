@@ -70,13 +70,14 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{0:<12d}        ! VS_ControlMode	- Generator torque control mode in above rated conditions {{0: constant torque, 1: constant power, 2: TSR tracking PI control}}\n'.format(int(controller.VS_ControlMode)))
     file.write('{0:<12d}        ! PC_ControlMode    - Blade pitch control mode {{0: No pitch, fix to fine pitch, 1: active PI blade pitch control}}\n'.format(int(controller.PC_ControlMode)))
     file.write('{0:<12d}        ! Y_ControlMode		- Yaw control mode {{0: no yaw control, 1: yaw rate control, 2: yaw-by-IPC}}\n'.format(int(controller.Y_ControlMode)))
+    file.write('{0:<12d}        ! Twr_ControlMode		- Tower control mode ? {{0: no yaw control, 1: yaw rate control, 2: yaw-by-IPC}}\n'.format(int(controller.Twr_ControlMode)))
     file.write('{0:<12d}        ! SS_Mode           - Setpoint Smoother mode {{0: no setpoint smoothing, 1: introduce setpoint smoothing}}\n'.format(int(controller.SS_Mode)))
     file.write('{0:<12d}        ! WE_Mode           - Wind speed estimator mode {{0: One-second low pass filtered hub height wind speed, 1: Immersion and Invariance Estimator, 2: Extended Kalman Filter}}\n'.format(int(controller.WE_Mode)))
     file.write('{0:<12d}        ! PS_Mode           - Pitch saturation mode {{0: no pitch saturation, 1: implement pitch saturation}}\n'.format(int(controller.PS_Mode > 0)))
     file.write('{0:<12d}        ! SD_Mode           - Shutdown mode {{0: no shutdown procedure, 1: pitch to max pitch at shutdown}}\n'.format(int(controller.SD_Mode)))
     file.write('{0:<12d}        ! Fl_Mode           - Floating specific feedback mode {{0: no nacelle velocity feedback, 1: feed back translational velocity, 2: feed back rotational veloicty}}\n'.format(int(controller.Fl_Mode)))
     file.write('{0:<12d}        ! Flp_Mode          - Flap control mode {{0: no flap control, 1: steady state flap angle, 2: Proportional flap control}}\n'.format(int(controller.Flp_Mode)))
-    # file.write('{0:<12d}        ! OL_Mode           -  Open loop control mode {{0: no open loop control, 1: open loop control vs. time, 2: open loop control vs. wind speed}}\n'.format(int(controller.OL_Mode)))
+    file.write('{0:<12d}        ! OL_Mode           -  Open loop control mode {{0: no open loop control, 1: open loop control vs. time, 2: open loop control vs. wind speed}}\n'.format(int(controller.OL_Mode)))
     file.write('\n')
     file.write('!------- FILTERS ----------------------------------------------------------\n') 
     file.write('{:<13.5f}       ! F_LPFCornerFreq	- Corner frequency (-3dB point) in the low-pass filters, [rad/s]\n'.format(turbine.bld_edgewise_freq * 1/4)) 
@@ -84,9 +85,11 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<13.5f}       ! F_NotchCornerFreq	- Natural frequency of the notch filter, [rad/s]\n'.format(controller.twr_freq))
     file.write('{:<10.5f}{:<9.5f} ! F_NotchBetaNumDen	- Two notch damping values (numerator and denominator, resp) - determines the width and depth of the notch, [-]\n'.format(0.0,0.25))
     file.write('{:<014.5f}      ! F_SSCornerFreq    - Corner frequency (-3dB point) in the first order low pass filter for the setpoint smoother, [rad/s].\n'.format(controller.ss_cornerfreq))
+    file.write('{:<14.5f} ! F_WECornerFreq    - ?[rad/s, -].\n'.format(1.0))
     file.write('{:<10.5f}{:<9.5f} ! F_FlCornerFreq    - Natural frequency and damping in the second order low pass filter of the tower-top fore-aft motion for floating feedback control [rad/s, -].\n'.format(controller.ptfm_freq, 1.0))
+    file.write('{:<14.5f} ! F_FlHighPassFreq   - ?.\n'.format(1.0))
     file.write('{:<10.5f}{:<9.5f} ! F_FlpCornerFreq   - Corner frequency and damping in the second order low pass filter of the blade root bending moment for flap control [rad/s, -].\n'.format(turbine.bld_flapwise_freq*1/3, 1.0))
-    
+
     file.write('\n')
     file.write('!------- BLADE PITCH CONTROL ----------------------------------------------\n')
     file.write('{:<11d}         ! PC_GS_n			- Amount of gain-scheduling table entries\n'.format(len(controller.pitch_op_pc)))
@@ -105,6 +108,7 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('\n')
     file.write('!------- INDIVIDUAL PITCH CONTROL -----------------------------------------\n')
     file.write('{:<13.1f}       ! IPC_IntSat		- Integrator saturation (maximum signal amplitude contribution to pitch from IPC), [rad]\n'.format(0.087266)) # Hardcode to 5 degrees
+    file.write('{:<13.1e} {:<6.1f}! IPC_KP			- Proportional gain for the individual pitch controller: first parameter for 1P reductions, second for 2P reductions, [-]\n'.format(controller.Kp_ipc1p,0.0))
     file.write('{:<13.1e} {:<6.1f}! IPC_KI			- Integral gain for the individual pitch controller: first parameter for 1P reductions, second for 2P reductions, [-]\n'.format(controller.Ki_ipc1p,0.0))
     file.write('{:<13.1e} {:<6.1f}! IPC_aziOffset		- Phase offset added to the azimuth angle for the individual pitch controller, [rad]. \n'.format(0.0,0.0))
     file.write('{:<13.1f}       ! IPC_CornerFreqAct - Corner frequency of the first-order actuators model, to induce a phase lag in the IPC signal {{0: Disable}}, [rad/s]\n'.format(0.0))
@@ -157,6 +161,8 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<13.1f}       ! Y_Rate			- Yaw rate [rad/s]\n'.format(0.0))
     file.write('\n')
     file.write('!------- TOWER FORE-AFT DAMPING -------------------------------------------\n')
+    file.write( '{:<11d}         ! Twr_ExclSpeed				- \n'.format(-1))
+    file.write( '{:<11d}         ! Twr_ExclBand				- \n'.format(-1))
     file.write('{:<11d}         ! FA_KI				- Integral gain for the fore-aft tower damper controller, -1 = off / >0 = on [rad s/m] - !NJA - Make this a flag\n'.format(-1))
     file.write('{:<13.1f}       ! FA_HPFCornerFreq	- Corner frequency (-3dB point) in the high-pass filter on the fore-aft acceleration signal [rad/s]\n'.format(0.0))
     file.write('{:<13.1f}       ! FA_IntSat			- Integrator saturation (maximum signal amplitude contribution to pitch from FA damper), [rad]\n'.format(0.0))
@@ -182,12 +188,14 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write('{:<014.8e}      ! Flp_Kp            - Blade root bending moment proportional gain for flap control [s]\n'.format(controller.Kp_flap[-1]))
     file.write('{:<014.8e}      ! Flp_Ki            - Flap displacement integral gain for flap control [-]\n'.format(controller.Ki_flap[-1]))
     file.write('{:<014.5f}      ! Flp_MaxPit        - Maximum (and minimum) flap pitch angle [rad]\n'.format(controller.flp_maxpit))
-    # file.write('\n')
-    # file.write('!------- OPEN LOOP INPUT -----------------------------------------------------\n')
-    # file.write(      '"{}"       ! OL_Filename       - Input file with open loop timeseries\n'.format(controller.ol_filename))
-    # file.write('{0:<12d}         ! Ind_Breakpoint    - The column in OL_Filename that contains the breakpoint (time if OL_Mode = 1)\n'.format(controller.ind_breakpoint))
-    # file.write('{0:<12d}         ! Ind_BldPitch      - The column in OL_Filename that contains the blade pitch input in rad\n'.format(controller.ind_bldpitch))
-    # file.write('{0:<12d}         ! Ind_GenTq         - The column in OL_Filename that contains the generator torque in Nm'.format(controller.ind_gentq))
+    file.write('\n')
+    file.write('!------- OPEN LOOP INPUT -----------------------------------------------------\n')
+    file.write(      '"{}"       ! OL_Filename       - Input file with open loop timeseries\n'.format(controller.ol_filename))
+    file.write('{0:<12d}         ! Ind_Breakpoint    - The column in OL_Filename that contains the breakpoint (time if OL_Mode = 1)\n'.format(controller.ind_breakpoint))
+    file.write('{0:<12d}         ! Ind_BldPitch      - The column in OL_Filename that contains the blade pitch input in rad\n'.format(controller.ind_bldpitch))
+    file.write('{0:<12d}         ! Ind_GenTq         - The column in OL_Filename that contains the generator torque in Nm'.format(controller.ind_gentq))
+    file.write(
+        '{0:<12d}         ! Ind_YawRate         - The column in OL_Filename that contains the ??  in Nm'.format(controller.ind_yawrate))
     file.close()
 
 def read_DISCON(DISCON_filename):
@@ -368,19 +376,23 @@ def DISCON_dict(turbine, controller, txt_filename=None):
     DISCON_dict['VS_ControlMode']	= controller.VS_ControlMode
     DISCON_dict['PC_ControlMode']   = controller.PC_ControlMode
     DISCON_dict['Y_ControlMode']	= controller.Y_ControlMode
+    DISCON_dict['Twr_ControlMode']	= controller.Twr_ControlMode
     DISCON_dict['SS_Mode']          = controller.SS_Mode
     DISCON_dict['WE_Mode']          = controller.WE_Mode
     DISCON_dict['PS_Mode']          = controller.PS_Mode
     DISCON_dict['SD_Mode']          = controller.SD_Mode
     DISCON_dict['Fl_Mode']          = controller.Fl_Mode
     DISCON_dict['Flp_Mode']         = controller.Flp_Mode
+    DISCON_dict['OL_Mode']         = controller.OL_Mode
     # ------- FILTERS -------
     DISCON_dict['F_LPFCornerFreq']	    = turbine.bld_edgewise_freq * 1/4
     DISCON_dict['F_LPFDamping']		    = controller.F_LPFDamping
     DISCON_dict['F_NotchCornerFreq']    = controller.twr_freq
     DISCON_dict['F_NotchBetaNumDen']    = [0.0, 0.25]
     DISCON_dict['F_SSCornerFreq']       = controller.ss_cornerfreq
+    DISCON_dict['F_WECornerFreq']       = controller.we_cornerfreq
     DISCON_dict['F_FlCornerFreq']       = [turbine.ptfm_freq, 1.0]
+    DISCON_dict['F_FlHighPassFreq']     = [1.0]
     DISCON_dict['F_FlpCornerFreq']      = [turbine.bld_flapwise_freq*1/3, 1.0]
     # ------- BLADE PITCH CONTROL -------
     DISCON_dict['PC_GS_n']			= len(controller.pitch_op_pc)
@@ -398,6 +410,7 @@ def DISCON_dict(turbine, controller, txt_filename=None):
     DISCON_dict['PC_Switch']		= 1 * deg2rad
     # ------- INDIVIDUAL PITCH CONTROL -------
     DISCON_dict['IPC_IntSat']		= 0.0
+    DISCON_dict['IPC_KP']			= [0.0, 0.0]
     DISCON_dict['IPC_KI']			= [0.0, 0.0]
     DISCON_dict['IPC_aziOffset']	= [0.0, 0.0]
     DISCON_dict['IPC_CornerFreqAct'] = 0.0
@@ -445,7 +458,9 @@ def DISCON_dict(turbine, controller, txt_filename=None):
     DISCON_dict['Y_omegaLPSlow']	= 0.0
     DISCON_dict['Y_Rate']			= 0.0
     # ------- TOWER FORE-AFT DAMPING -------
-    DISCON_dict['JA']                = -1
+    DISCON_dict['Twr_ExclSpeed']                = -1
+    DISCON_dict['Twr_ExclBand']                = -1
+    DISCON_dict['FA_KI']                = -1
     DISCON_dict['FA_HPF_CornerFreq'] = 0.0
     DISCON_dict['FA_IntSat']		 = 0.0
     # ------- MINIMUM PITCH SATURATION -------
@@ -462,6 +477,12 @@ def DISCON_dict(turbine, controller, txt_filename=None):
     DISCON_dict['Flp_Kp']           = [controller.Kp_flap[-1]]
     DISCON_dict['Flp_Ki']           = [controller.Ki_flap[-1]]
     DISCON_dict['Flp_MaxPit']       = controller.flp_maxpit
+    # ------- OL Mode -------
+    DISCON_dict['OL_Filename']        = controller.ol_filename
+    DISCON_dict['Ind_Breakpoint']           = controller.ind_breakpoint
+    DISCON_dict['Ind_BldPitch']           = controller.ind_bldpitch
+    DISCON_dict['Ind_GenTq']       = controller.ind_gentq
+    DISCON_dict['Ind_YawRate']       = controller.ind_yawrate
 
     return DISCON_dict
 

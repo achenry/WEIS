@@ -1330,13 +1330,14 @@ class InputWriter_OpenFAST(object):
         controller.VS_ControlMode       = int(self.fst_vt['DISCON_in']['VS_ControlMode'])
         controller.PC_ControlMode       = int(self.fst_vt['DISCON_in']['PC_ControlMode'])
         controller.Y_ControlMode        = int(self.fst_vt['DISCON_in']['Y_ControlMode'])
+        controller.Twr_ControlMode        = int(self.fst_vt['DISCON_in']['Twr_ControlMode'])
         controller.SS_Mode              = int(self.fst_vt['DISCON_in']['SS_Mode'])
         controller.WE_Mode              = int(self.fst_vt['DISCON_in']['WE_Mode'])
         controller.PS_Mode              = int(self.fst_vt['DISCON_in']['PS_Mode'])
         controller.SD_Mode              = int(self.fst_vt['DISCON_in']['SD_Mode'])
         controller.Fl_Mode              = int(self.fst_vt['DISCON_in']['Fl_Mode'])
         controller.Flp_Mode             = int(self.fst_vt['DISCON_in']['Flp_Mode'])
-        # controller.OL_Mode              = int(self.fst_vt['DISCON_in']['OL_Mode'])
+        controller.OL_Mode              = int(self.fst_vt['DISCON_in']['OL_Mode'])
         controller.F_LPFDamping         = self.fst_vt['DISCON_in']['F_LPFDamping']
         controller.ss_cornerfreq        = self.fst_vt['DISCON_in']['F_SSCornerFreq']
         controller.pitch_op_pc          = self.fst_vt['DISCON_in']['PC_GS_angles']
@@ -1344,8 +1345,11 @@ class InputWriter_OpenFAST(object):
         controller.pc_gain_schedule.Ki  = self.fst_vt['DISCON_in']['PC_GS_KI']
         if 'IPC_KI' in self.fst_vt['DISCON_in'].keys():
             controller.Ki_ipc1p         = self.fst_vt['DISCON_in']['IPC_KI'][0]
+            controller.Kp_ipc1p         = self.fst_vt['DISCON_in']['IPC_KP'][0]
         else:
             controller.Ki_ipc1p         = 0.
+            controller.Kp_ipc1p = 0.
+
         controller.max_pitch            = self.fst_vt['DISCON_in']['PC_MaxPit']
         controller.min_pitch            = self.fst_vt['DISCON_in']['PC_MinPit']
         controller.vs_minspd            = self.fst_vt['DISCON_in']['VS_MinOMSpd']
@@ -1371,10 +1375,11 @@ class InputWriter_OpenFAST(object):
         controller.ptfm_freq            = self.fst_vt['DISCON_in']['F_FlCornerFreq'][0]
 
 
-        # controller.ol_filename           = self.fst_vt['DISCON_in']['OL_Filename']
-        # controller.ind_breakpoint        = int(self.fst_vt['DISCON_in']['Ind_Breakpoint'])
-        # controller.ind_bldpitch          = int(self.fst_vt['DISCON_in']['Ind_BldPitch'])
-        # controller.ind_gentq             = int(self.fst_vt['DISCON_in']['Ind_GenTq'])
+        controller.ol_filename           = self.fst_vt['DISCON_in']['OL_Filename']
+        controller.ind_breakpoint        = int(self.fst_vt['DISCON_in']['Ind_Breakpoint'])
+        controller.ind_bldpitch          = int(self.fst_vt['DISCON_in']['Ind_BldPitch'])
+        controller.ind_gentq             = int(self.fst_vt['DISCON_in']['Ind_GenTq'])
+        controller.ind_yawrate            = int(self.fst_vt['DISCON_in']['Ind_YawRate'])
 
         turbine = type('', (), {})()
         turbine.Cp = type('', (), {})()
