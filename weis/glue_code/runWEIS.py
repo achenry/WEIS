@@ -212,11 +212,6 @@ def run_weis(fname_wt_input, fname_modeling_options, fname_opt_options, overridd
         # close signal to subprocessors
         subprocessor_stop(comm_map_down)
         sys.stdout.flush()
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> WISDEM-develop
     if rank == 0:
         return wt_opt, modeling_options, opt_options
     else:
