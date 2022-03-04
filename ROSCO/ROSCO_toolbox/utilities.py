@@ -193,9 +193,8 @@ def write_DISCON(turbine, controller, param_file='DISCON.IN', txt_filename='Cp_C
     file.write(      '"{}"       ! OL_Filename       - Input file with open loop timeseries\n'.format(controller.ol_filename))
     file.write('{0:<12d}         ! Ind_Breakpoint    - The column in OL_Filename that contains the breakpoint (time if OL_Mode = 1)\n'.format(controller.ind_breakpoint))
     file.write('{0:<12d}         ! Ind_BldPitch      - The column in OL_Filename that contains the blade pitch input in rad\n'.format(controller.ind_bldpitch))
-    file.write('{0:<12d}         ! Ind_GenTq         - The column in OL_Filename that contains the generator torque in Nm'.format(controller.ind_gentq))
-    file.write(
-        '{0:<12d}         ! Ind_YawRate         - The column in OL_Filename that contains the ??  in Nm'.format(controller.ind_yawrate))
+    file.write('{0:<12d}         ! Ind_GenTq         - The column in OL_Filename that contains the generator torque in Nm\n'.format(controller.ind_gentq))
+    file.write('{0:<12d}         ! Ind_YawRate         - The column in OL_Filename that contains the ??  in Nm'.format(controller.ind_yawrate))
     file.close()
 
 def read_DISCON(DISCON_filename):
