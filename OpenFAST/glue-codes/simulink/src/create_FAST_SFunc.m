@@ -12,10 +12,10 @@
 %
 % Run `mex -setup` in Matlab to configure a C compiler if you have not already done so.
 
-
+mex -setup
 mexname = 'FAST_SFunc'; % base name of the resulting mex file
 
-built_with_visualStudio = true; %if the libraries were built with cmake, set to false
+built_with_visualStudio = false; %if the libraries were built with cmake, set to false
 
 
 if (ispc && built_with_visualStudio)   
@@ -47,7 +47,7 @@ else
         outDir = fullfile(installDir, 'lib');
         % If there are shared libraries does it work for outDir to be the local directory?
     else
-        installDir = '../../../install';
+        installDir = '../../../../local';
         outDir = fullfile(installDir, 'lib');
     end
 
